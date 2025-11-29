@@ -43,6 +43,11 @@
         .btn-orange { background: #fd7e14; }
         .btn-purple { background: #6f42c1; }
 
+        /* Nút Heart (Trái tim) - MỚI THÊM */
+        .btn-heart { background: transparent; color: #ccc; font-size: 20px; padding: 0 5px; transition: 0.2s; box-shadow: none; border: 1px solid #eee; }
+        .btn-heart:hover { background: #f1f1f1; transform: scale(1.2); }
+        .btn-heart.liked { color: #e91e63; border-color: #e91e63; } /* Màu hồng khi like */
+
         /* Player */
         .player-bar { margin-top: 20px; padding: 15px; background: #212529; color: white; border-radius: 12px; text-align: center; display: none; }
         audio { width: 100%; margin-top: 10px; }
@@ -72,9 +77,8 @@
                 <div class="auth-tab active" onclick="showAuth('login')" id="tabLogin">Đăng Nhập</div>
                 <div class="auth-tab" onclick="showAuth('register')" id="tabReg">Đăng Ký</div>
             </div>
-            
             <div id="loginForm">
-                <input type="text" id="loginUser" placeholder="User (VD: admin)">
+                <input type="text" id="loginUser" placeholder="User">
                 <input type="password" id="loginPass" placeholder="Pass">
                 <button onclick="doLogin()">Đăng Nhập</button>
             </div>
@@ -89,32 +93,19 @@
         <div id="userSection" style="display:none;">
             <h3 style="margin-top:0;">👋 Hi, <span id="displayUser"></span></h3>
             <p style="font-size:13px; color:#666;">Role: <span id="displayRole" style="font-weight:bold;"></span></p>
-            
             <div style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
                 <h4>📁 Playlist</h4>
                 <input type="text" id="newPlName" placeholder="Tên Playlist...">
                 <button onclick="createPlaylist()" style="background:#6c757d;">Tạo Mới</button>
             </div>
-
             <div id="adminPanel" style="display:none; margin-top:20px; background:#fff3cd; padding:10px; border-radius:8px;">
-                <h4 style="margin:0 0 10px 0;">🛠 Thêm Nhạc (Admin)</h4>
-                
-                <label style="font-size:11px;">Tên bài:</label>
-                <input type="text" id="newTitle" placeholder="Ví dụ: Lạc Trôi">
-                
-                <label style="font-size:11px;">Ca sĩ:</label>
-                <input type="text" id="newArtist" placeholder="Ví dụ: Sơn Tùng">
-                
-                <label style="font-size:11px;">File Nhạc (.mp3):</label>
+                <h4 style="margin:0 0 10px 0;">🛠 Thêm Nhạc</h4>
+                <input type="text" id="newTitle" placeholder="Tên bài">
+                <input type="text" id="newArtist" placeholder="Ca sĩ">
                 <input type="file" id="newFile" accept="audio/*">
-                
-                <label style="font-size:11px;">Ảnh Bìa (.jpg/png):</label>
                 <input type="file" id="newImage" accept="image/*">
-                
-                <label style="font-size:11px;">Video MV (.mp4) - Tùy chọn:</label>
                 <input type="file" id="newVideo" accept="video/*">
-                
-                <button onclick="addSong()">☁️ Upload & Thêm</button>
+                <button onclick="addSong()">☁️ Upload</button>
             </div>
             <button onclick="doLogout()" class="btn-red" style="margin-top:20px;">Đăng Xuất</button>
         </div>
@@ -123,13 +114,14 @@
     <div class="main-content">
         <div class="tabs">
             <button class="tab-btn active" id="btnAll" onclick="switchTab('all')">🎵 Kho Nhạc</button>
+            <button class="tab-btn" id="btnLikes" onclick="switchTab('likes')">❤️ Yêu Thích</button>
             <button class="tab-btn" id="btnPl" onclick="switchTab('playlists')">📂 Playlist</button>
             <button class="tab-btn" id="btnHistory" onclick="switchTab('history')">🕒 Lịch Sử</button>
             <button class="tab-btn" id="btnUsers" style="display:none;" onclick="switchTab('users')">👥 QL User</button>
         </div>
 
         <div id="searchBox" class="search-container">
-            <input type="text" id="searchInput" placeholder="🔍 Tìm tên bài hát hoặc ca sĩ..." onkeypress="handleEnter(event)">
+            <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm..." onkeypress="handleEnter(event)">
             <button onclick="searchSong()">Tìm</button>
         </div>
 
@@ -150,7 +142,6 @@
             <button class="close-btn" onclick="closeModal('playlistModal')">Đóng</button>
         </div>
     </div>
-
     <div class="modal-overlay" id="videoModal">
         <div class="modal-box video-box">
             <button class="close-video-btn" onclick="closeVideo()">×</button>
@@ -162,6 +153,7 @@
         const API_URL = "http://localhost:3000/api";
         let currentUser = null;
         let selectedSongId = null;
+        let likedSongIds = []; // Mảng chứa ID các bài đã like
 
         // --- AUTH ---
         function showAuth(t) {
@@ -189,11 +181,11 @@
             try {
                 const res = await fetch(`${API_URL}/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p}) });
                 const json = await res.json();
-                if(res.ok) { alert("Đăng ký thành công!"); showAuth('login'); }
+                if(res.ok) { alert("Thành công!"); showAuth('login'); }
                 else document.getElementById('authMsg').innerText = json.error;
             } catch(e){ alert("Lỗi kết nối"); }
         }
-        function doLogout() { currentUser=null; updateUI(false); location.reload(); }
+        function doLogout() { currentUser=null; likedSongIds=[]; updateUI(false); location.reload(); }
         function updateUI(isLogin) {
             document.getElementById('authSection').style.display = isLogin?'none':'block';
             document.getElementById('userSection').style.display = isLogin?'block':'none';
@@ -210,12 +202,16 @@
         function switchTab(type) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             const searchBox = document.getElementById('searchBox');
-            searchBox.style.display = 'none'; // Mặc định ẩn tìm kiếm
+            searchBox.style.display = 'none';
 
             if(type=='all') {
                 document.getElementById('btnAll').classList.add('active');
-                searchBox.style.display = 'flex'; // Chỉ hiện tìm kiếm ở tab Nhạc
+                searchBox.style.display = 'flex';
                 loadSongs(); 
+            }
+            else if(type=='likes') { // Tab Yêu thích
+                document.getElementById('btnLikes').classList.add('active');
+                loadLikedSongs();
             }
             else if(type=='playlists') {
                 document.getElementById('btnPl').classList.add('active');
@@ -230,19 +226,45 @@
                 loadUsers();
             }
         }
-
-        function searchSong() {
-            const keyword = document.getElementById('searchInput').value;
-            loadSongs(keyword);
-        }
+        function searchSong() { loadSongs(document.getElementById('searchInput').value); }
         function handleEnter(e) { if(e.key==='Enter') searchSong(); }
 
-        // --- 1. NHẠC & TÌM KIẾM ---
+        // --- HELPERS: LIKE ---
+        async function fetchLikedIds() {
+            if(!currentUser) return;
+            const res = await fetch(`${API_URL}/user/likes/ids`, { headers: {'X-User-ID': currentUser.id} });
+            likedSongIds = await res.json();
+        }
+
+        async function toggleLike(e, songId) {
+            e.stopPropagation();
+            if(!currentUser) return alert("Cần đăng nhập!");
+            
+            const btn = e.target;
+            const res = await fetch(`${API_URL}/user/likes/toggle`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-User-ID': currentUser.id },
+                body: JSON.stringify({ song_id: songId })
+            });
+            const json = await res.json();
+            
+            if(json.status) { // Like
+                btn.classList.add('liked');
+                btn.innerText = '❤️';
+                likedSongIds.push(songId);
+            } else { // Unlike
+                btn.classList.remove('liked');
+                btn.innerText = '🤍';
+                likedSongIds = likedSongIds.filter(id => id !== songId);
+                if(document.getElementById('btnLikes').classList.contains('active')) loadLikedSongs();
+            }
+        }
+
+        // --- 1. LOAD SONGS (CÓ NÚT LIKE) ---
         async function loadSongs(query="") {
+            await fetchLikedIds(); // Cập nhật list like
             const list = document.getElementById('playlist');
             list.innerHTML = "<li>Đang tải...</li>";
-            
-            // Xử lý URL tìm kiếm
             let url = `${API_URL}/songs`;
             if(query) url += `?q=${encodeURIComponent(query)}`;
 
@@ -250,31 +272,50 @@
             const json = await res.json();
             list.innerHTML = "";
             
-            if (json.data.length === 0) {
-                list.innerHTML = `<li style="text-align:center; padding:20px;">Không tìm thấy bài hát nào.</li>`;
-                return;
+            if (json.data.length === 0) return list.innerHTML = `<li style="text-align:center; padding:20px;">Không tìm thấy.</li>`;
+
+            json.data.forEach(song => { renderSongItem(song, list); });
+        }
+
+        async function loadLikedSongs() {
+            if(!currentUser) return alert("Cần đăng nhập!");
+            const list = document.getElementById('playlist');
+            list.innerHTML = "<li>Đang tải...</li>";
+            await fetchLikedIds(); 
+
+            const res = await fetch(`${API_URL}/user/likes`, { headers: { 'X-User-ID': currentUser.id } });
+            const json = await res.json();
+            list.innerHTML = "";
+
+            if (json.data.length === 0) return list.innerHTML = `<li style="text-align:center; padding:20px;">Chưa thích bài nào.</li>`;
+            json.data.forEach(song => { renderSongItem(song, list); });
+        }
+
+        function renderSongItem(song, listElement) {
+            const li = document.createElement('li'); li.className='song-item';
+            li.onclick = (e) => { if(e.target.tagName!=='BUTTON') playSong(song.stream_url, song.title, song.id); };
+            
+            let buttons = "";
+            if(currentUser) {
+                // Nút Like
+                const isLiked = likedSongIds.includes(song.id);
+                const heartIcon = isLiked ? '❤️' : '🤍';
+                const heartClass = isLiked ? 'btn-heart liked' : 'btn-heart';
+                buttons += `<button class="action-btn ${heartClass}" onclick="toggleLike(event, ${song.id})">${heartIcon}</button>`;
+
+                if(song.video_url) buttons += `<button class="action-btn btn-purple" onclick="openVideo(event, '${song.video_url}')">🎥 MV</button>`;
+                buttons += `<button class="action-btn btn-green" onclick="openPlaylistModal(${song.id})">➕ PL</button>`;
+                if(currentUser.role === 'admin') {
+                    buttons += `<button class="action-btn btn-red" onclick="deleteSongAdmin(event, ${song.id})">🗑 Xóa</button>`;
+                }
             }
 
-            json.data.forEach(song => {
-                const li = document.createElement('li'); li.className='song-item';
-                li.onclick = (e) => { if(e.target.tagName!=='BUTTON') playSong(song.stream_url, song.title, song.id); };
-                
-                let buttons = "";
-                if(currentUser) {
-                    if(song.video_url) buttons += `<button class="action-btn btn-purple" onclick="openVideo(event, '${song.video_url}')">🎥 MV</button>`;
-                    buttons += `<button class="action-btn btn-green" onclick="openPlaylistModal(${song.id})">➕ PL</button>`;
-                    if(currentUser.role === 'admin') {
-                        buttons += `<button class="action-btn btn-red" onclick="deleteSongAdmin(event, ${song.id})">🗑 Xóa</button>`;
-                    }
-                }
-
-                li.innerHTML = `
-                    <img class="song-img" src="${song.image_url}" onerror="this.src='https://via.placeholder.com/50'">
-                    <div style="flex:1;"><strong>${song.title}</strong><br><small>${song.artist}</small></div>
-                    ${buttons}
-                `;
-                list.appendChild(li);
-            });
+            li.innerHTML = `
+                <img class="song-img" src="${song.image_url}" onerror="this.src='https://via.placeholder.com/50'">
+                <div style="flex:1;"><strong>${song.title}</strong><br><small>${song.artist}</small></div>
+                ${buttons}
+            `;
+            listElement.appendChild(li);
         }
 
         // --- VIDEO ---
@@ -301,37 +342,15 @@
                 json.data.forEach(u => {
                     const isLocked = u.is_locked === 1;
                     const statusText = isLocked ? "<b style='color:red'>(Bị Khóa)</b>" : "<span style='color:green'>Hoạt động</span>";
-                    const lockBtnText = isLocked ? "🔓 Mở" : "🔒 Khóa";
+                    const lockBtnText = isLocked ? "🔓" : "🔒";
                     const lockBtnColor = isLocked ? "btn-green" : "btn-orange";
-                    const li = document.createElement('li'); li.className='song-item'; li.style.cursor = 'default';
-                    li.innerHTML = `
-                        <div style="font-size:20px; margin-right:15px;">👤</div>
-                        <div style="flex:1;"><strong>${u.username}</strong> (${u.role})<br><small>${statusText}</small></div>
-                        ${u.id !== currentUser.id ? `<button class="action-btn ${lockBtnColor}" onclick="toggleLockUser(${u.id})">${lockBtnText}</button> <button class="action-btn btn-red" onclick="deleteUser(${u.id})">🗑 Xóa</button>` : '<small>Tôi</small>'}
-                    `;
-                    list.appendChild(li);
+                    list.innerHTML += `<li class="song-item" style="cursor:default"><div style="font-size:20px; margin-right:15px;">👤</div><div style="flex:1;"><strong>${u.username}</strong> (${u.role})<br><small>${statusText}</small></div>${u.id !== currentUser.id ? `<button class="action-btn ${lockBtnColor}" onclick="toggleLockUser(${u.id})">${lockBtnText}</button> <button class="action-btn btn-red" onclick="deleteUser(${u.id})">🗑</button>` : '<small>Tôi</small>'}</li>`;
                 });
             } catch(e) { console.error(e); }
         }
-        async function deleteSongAdmin(e, id) {
-            e.stopPropagation();
-            if(!confirm("Xóa bài hát này vĩnh viễn?")) return;
-            const res = await fetch(`${API_URL}/admin/songs/${id}`, { method:'DELETE', headers:{'X-User-Role':'admin', 'X-User-ID':currentUser.id} });
-            if(res.ok) { alert("Đã xóa nhạc!"); loadSongs(); } else alert("Lỗi xóa");
-        }
-        async function deleteUser(id) {
-            if(!confirm("Xóa user này?")) return;
-            const res = await fetch(`${API_URL}/admin/users/${id}`, { method:'DELETE', headers:{'X-User-Role':'admin', 'X-User-ID':currentUser.id} });
-            if(res.ok) { alert("Đã xóa user!"); loadUsers(); } else alert("Lỗi xóa");
-        }
-        async function toggleLockUser(id) {
-            const res = await fetch(`${API_URL}/admin/users/lock/${id}`, { method:'PUT', headers:{'X-User-Role':'admin', 'X-User-ID':currentUser.id} });
-            if(res.ok) { 
-                const json = await res.json();
-                alert(json.message); 
-                loadUsers(); 
-            } else alert("Lỗi tác vụ");
-        }
+        async function deleteSongAdmin(e, id) { e.stopPropagation(); if(confirm("Xóa vĩnh viễn?")) { await fetch(`${API_URL}/admin/songs/${id}`, { method:'DELETE', headers:{'X-User-Role':'admin', 'X-User-ID':currentUser.id} }); loadSongs(); } }
+        async function deleteUser(id) { if(confirm("Xóa user?")) { await fetch(`${API_URL}/admin/users/${id}`, { method:'DELETE', headers:{'X-User-Role':'admin', 'X-User-ID':currentUser.id} }); loadUsers(); } }
+        async function toggleLockUser(id) { const res = await fetch(`${API_URL}/admin/users/lock/${id}`, { method:'PUT', headers:{'X-User-Role':'admin', 'X-User-ID':currentUser.id} }); if(res.ok) { const json = await res.json(); alert(json.message); loadUsers(); } }
 
         // --- PLAYLIST ---
         async function loadPlaylists() {
@@ -354,90 +373,36 @@
             json.data.forEach(song => {
                 const li = document.createElement('li'); li.className='song-item';
                 li.onclick = (e) => { if(e.target.tagName!=='BUTTON') playSong(song.stream_url, song.title, song.id); };
-                li.innerHTML = `<img class="song-img" src="${song.image_url}" onerror="this.src='https://via.placeholder.com/50'"><div style="flex:1;"><strong>${song.title}</strong></div><button class="action-btn btn-red" onclick="remSong(event, ${id}, ${song.id})">❌</button>`;
+                
+                // Nút xóa khỏi PL & Video
+                let btns = `<button class="action-btn btn-red" onclick="remSong(event, ${id}, ${song.id})">❌</button>`;
+                if(song.video_url) btns = `<button class="action-btn btn-purple" onclick="openVideo(event, '${song.video_url}')">🎥</button> ` + btns;
+                
+                li.innerHTML = `<img class="song-img" src="${song.image_url}" onerror="this.src='https://via.placeholder.com/50'"><div style="flex:1;"><strong>${song.title}</strong></div>${btns}`;
                 list.appendChild(li);
             });
         }
-        async function createPlaylist() {
-            const name = document.getElementById('newPlName').value;
-            if(!name) return;
-            await fetch(`${API_URL}/user/playlists/create`, { method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({name}) });
-            alert("Tạo xong!"); document.getElementById('newPlName').value=""; switchTab('playlists');
-        }
+        async function createPlaylist() { const name = document.getElementById('newPlName').value; if(!name) return; await fetch(`${API_URL}/user/playlists/create`, { method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({name}) }); alert("Tạo xong!"); document.getElementById('newPlName').value=""; switchTab('playlists'); }
         async function delPl(id) { if(confirm("Xóa?")) { await fetch(`${API_URL}/user/playlists/delete/${id}`, {method:'DELETE', headers:{'X-User-ID':currentUser.id}}); loadPlaylists(); } }
         async function remSong(e, plId, sId) { e.stopPropagation(); if(confirm("Xóa bài này?")) { await fetch(`${API_URL}/user/playlists/remove-song`, {method:'DELETE', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({playlist_id:plId, song_id:sId})}); const name = document.getElementById('currentPlName').innerText.replace('📂 ',''); viewPl(plId, name); } }
         
-        async function openPlaylistModal(songId) {
-            selectedSongId = songId;
-            document.getElementById('playlistModal').style.display = 'flex';
-            const list = document.getElementById('modalPlaylistList');
-            const res = await fetch(`${API_URL}/user/playlists`, { headers: { 'X-User-ID': currentUser.id } });
-            const json = await res.json();
-            list.innerHTML = "";
-            if(json.data.length===0) list.innerHTML="<li class='modal-item'>Bạn chưa có playlist nào.</li>";
-            json.data.forEach(pl => {
-                const li = document.createElement('li'); li.className='modal-item';
-                li.innerHTML = `📁 <b>${pl.name}</b>`; li.onclick=()=>addToPlaylistNow(pl.id);
-                list.appendChild(li);
-            });
-        }
-        async function addToPlaylistNow(plId) {
-            const res = await fetch(`${API_URL}/user/playlists/add-song`, {method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({playlist_id:plId, song_id:selectedSongId})});
-            if(res.ok) { alert("✅ Đã thêm!"); closeModal('playlistModal'); } else alert("Đã có rồi!");
-        }
+        async function openPlaylistModal(songId) { selectedSongId = songId; document.getElementById('playlistModal').style.display = 'flex'; const list = document.getElementById('modalPlaylistList'); const res = await fetch(`${API_URL}/user/playlists`, { headers: { 'X-User-ID': currentUser.id } }); const json = await res.json(); list.innerHTML = ""; if(json.data.length===0) list.innerHTML="<li class='modal-item'>Bạn chưa có playlist nào.</li>"; json.data.forEach(pl => { const li = document.createElement('li'); li.className='modal-item'; li.innerHTML = `📁 <b>${pl.name}</b>`; li.onclick=()=>addToPlaylistNow(pl.id); list.appendChild(li); }); }
+        async function addToPlaylistNow(plId) { const res = await fetch(`${API_URL}/user/playlists/add-song`, {method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({playlist_id:plId, song_id:selectedSongId})}); if(res.ok) { alert("✅ Đã thêm!"); closeModal('playlistModal'); } else alert("Nhạc đã tồn tại"); }
         function closeModal(id) { document.getElementById(id).style.display='none'; }
 
-        // --- OTHER ---
-        async function loadHistory() {
-            const list = document.getElementById('playlist');
-            const res = await fetch(`${API_URL}/user/history`, { headers: { 'X-User-ID': currentUser.id } });
-            const json = await res.json();
-            list.innerHTML = "";
-            json.data.forEach(i => list.innerHTML+=`<li class="song-item"><div><strong>${i.title}</strong><br><small>${new Date(i.played_at).toLocaleString()}</small></div></li>`);
-        }
-        function playSong(url, title, id) {
-            if(!url) return alert("Lỗi file nhạc");
-            document.getElementById('playerBar').style.display='block';
-            document.getElementById('nowPlayingText').innerText = "Đang phát: "+title;
-            const aud = document.getElementById('audioPlayer'); aud.src=url; aud.play();
-            if(currentUser) fetch(`${API_URL}/user/history/add`, {method:'POST',headers:{'Content-Type':'application/json','X-User-ID':currentUser.id},body:JSON.stringify({song_id:id})});
-        }
+        // --- HISTORY & PLAY ---
+        async function loadHistory() { const list = document.getElementById('playlist'); const res = await fetch(`${API_URL}/user/history`, { headers: { 'X-User-ID': currentUser.id } }); const json = await res.json(); list.innerHTML = ""; json.data.forEach(i => list.innerHTML+=`<li class="song-item"><div><strong>${i.title}</strong><br><small>${new Date(i.played_at).toLocaleString()}</small></div></li>`); }
+        function playSong(url, title, id) { if(!url) return alert("Lỗi file nhạc"); document.getElementById('playerBar').style.display='block'; document.getElementById('nowPlayingText').innerText = "Đang phát: "+title; const aud = document.getElementById('audioPlayer'); aud.src=url; aud.play(); if(currentUser) fetch(`${API_URL}/user/history/add`, {method:'POST',headers:{'Content-Type':'application/json','X-User-ID':currentUser.id},body:JSON.stringify({song_id:id})}); }
 
+        // --- UPLOAD ---
         async function addSong() {
-            const title = document.getElementById('newTitle').value;
-            const artist = document.getElementById('newArtist').value;
-            const musicFile = document.getElementById('newFile').files[0];
-            const imageFile = document.getElementById('newImage').files[0];
-            const videoFile = document.getElementById('newVideo').files[0];
-
-            if (!title || !artist || !musicFile) return alert("Thiếu thông tin bắt buộc!");
-
             const formData = new FormData();
-            formData.append('title', title);
-            formData.append('artist', artist);
-            formData.append('musicFile', musicFile);
-            if(imageFile) formData.append('imageFile', imageFile);
-            if(videoFile) formData.append('videoFile', videoFile);
-
-            try {
-                const res = await fetch(`${API_URL}/admin/songs/add`, {
-                    method: 'POST',
-                    headers: { 'X-User-Role': 'admin', 'X-User-ID': currentUser.id },
-                    body: formData
-                });
-                const json = await res.json();
-                if (res.ok) { 
-                    alert("✅ Upload thành công!"); 
-                    // Clear form
-                    document.getElementById('newTitle').value="";
-                    document.getElementById('newArtist').value="";
-                    document.getElementById('newFile').value="";
-                    document.getElementById('newImage').value="";
-                    document.getElementById('newVideo').value="";
-                    loadSongs();
-                }
-                else alert("Lỗi: " + json.error);
-            } catch (e) { alert("Lỗi upload!"); }
+            formData.append('title', document.getElementById('newTitle').value);
+            formData.append('artist', document.getElementById('newArtist').value);
+            formData.append('musicFile', document.getElementById('newFile').files[0]);
+            formData.append('imageFile', document.getElementById('newImage').files[0]);
+            formData.append('videoFile', document.getElementById('newVideo').files[0]);
+            try { const res = await fetch(`${API_URL}/admin/songs/add`, { method: 'POST', headers: { 'X-User-Role': 'admin', 'X-User-ID': currentUser.id }, body: formData }); const json = await res.json(); if (res.ok) { alert("✅ Upload thành công!"); loadSongs(); } else alert("Lỗi: " + json.error); } catch (e) { alert("Lỗi upload!"); }
         }
     </script>
 </body>

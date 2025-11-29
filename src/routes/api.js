@@ -1,6 +1,6 @@
 /**
  * src/routes/api.js
- * Định nghĩa đường dẫn API (Bao gồm Upload File)
+ * Định nghĩa đường dẫn API (Full features: Video, Upload, Like, Playlist...)
  */
 
 const express = require('express');
@@ -12,12 +12,13 @@ const path = require('path');
 const authCtrl = require('../controllers/authController');
 const songCtrl = require('../controllers/songController');
 const playCtrl = require('../controllers/playlistController');
+const likeCtrl = require('../controllers/likeController'); // <-- Quan trọng: Import Controller Like
 
 // Import Middleware kiểm tra quyền
 const { checkUser, checkAdmin } = require('../middleware/auth');
 
 // ============================================================
-// CẤU HÌNH UPLOAD FILE
+// CẤU HÌNH UPLOAD FILE (MULTER)
 // ============================================================
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -34,6 +35,7 @@ const storage = multer.diskStorage({
         }
     },
     filename: function (req, file, cb) {
+        // Đặt tên file: thời gian hiện tại + tên gốc
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
@@ -58,10 +60,9 @@ router.put('/admin/users/lock/:id', checkAdmin, authCtrl.toggleLockUser);
 // ============================================================
 router.get('/songs', songCtrl.getAllSongs);
 router.get('/stream/:id', songCtrl.streamSong);
-router.get('/stream-video/:id', songCtrl.streamVideo);
+router.get('/stream-video/:id', songCtrl.streamVideo); // API Phát Video
 
-
-// upload.fields cho phép nhận nhiều loại file cùng lúc
+// Admin: Thêm nhạc mới (Có Upload Nhạc, Ảnh, Video)
 router.post('/admin/songs/add', 
     checkAdmin, 
     upload.fields([
@@ -89,5 +90,12 @@ router.delete('/user/playlists/remove-song', checkUser, playCtrl.removeSongFromP
 // ============================================================
 router.get('/user/history', checkUser, playCtrl.getHistory);
 router.post('/user/history/add', checkUser, playCtrl.addToHistory);
+
+// ============================================================
+// 6. YÊU THÍCH (LIKES)
+// ============================================================
+router.post('/user/likes/toggle', checkUser, likeCtrl.toggleLike);
+router.get('/user/likes', checkUser, likeCtrl.getLikedSongs);
+router.get('/user/likes/ids', checkUser, likeCtrl.getLikedIds);
 
 module.exports = router;

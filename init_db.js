@@ -68,6 +68,18 @@ db.serialize(() => {
 
     console.log("⏳ Đang thêm dữ liệu mẫu...");
 
+    // 6. LIKES (MỚI THÊM) - Lưu bài hát yêu thích
+    db.run(`CREATE TABLE IF NOT EXISTS likes (
+        user_id INTEGER NOT NULL,
+        song_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, song_id), -- Một người chỉ like 1 bài 1 lần
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        FOREIGN KEY(song_id) REFERENCES songs(id)
+    )`);
+
+    console.log("⏳ Đang thêm dữ liệu mẫu...");
+
     // Thêm User mẫu (Admin và User thường)
     // Admin: admin / 123456
     db.run("INSERT OR IGNORE INTO users (username, password, role, is_locked) VALUES ('admin', '123456', 'admin', 0)");
