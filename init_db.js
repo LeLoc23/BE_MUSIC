@@ -1,7 +1,7 @@
 /**
- * FILE KHỞI TẠO DATABASE (CẬP NHẬT FULL TÍNH NĂNG ADMIN)
- * Chức năng: Tạo bảng và thêm dữ liệu mẫu.
- * Cách chạy: 
+ * FILE KHỞI TẠO DATABASE (CẬP NHẬT TOÀN DIỆN)
+ * Chức năng: Tạo bảng (Songs, Users, Playlists, History, Likes) và thêm dữ liệu mẫu.
+ * * CÁCH CHẠY: 
  * 1. Xóa file database.db cũ đi.
  * 2. Chạy lệnh: node init_db.js
  */
@@ -19,17 +19,20 @@ const db = new sqlite3.Database(dbPath, (err) => {
 db.serialize(() => {
     console.log("⏳ Đang tạo các bảng dữ liệu...");
 
-    // 1. Bảng Songs (Thêm cột video_path)
+    // 1. Bảng Songs (CẬP NHẬT: Thêm genre, lyrics, year, video_path)
     db.run(`CREATE TABLE IF NOT EXISTS songs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         artist TEXT NOT NULL,
         file_path TEXT NOT NULL, 
         image_path TEXT,
-        video_path TEXT 
+        video_path TEXT,
+        genre TEXT DEFAULT 'Pop',
+        lyrics TEXT DEFAULT '',
+        year INTEGER DEFAULT 2024
     )`);
 
-    // 2. Bảng Users (CẬP NHẬT: Thêm cột is_locked để Admin khóa user)
+    // 2. Bảng Users (CẬP NHẬT: Thêm cột is_locked)
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
@@ -66,14 +69,12 @@ db.serialize(() => {
         FOREIGN KEY(song_id) REFERENCES songs(id)
     )`);
 
-    console.log("⏳ Đang thêm dữ liệu mẫu...");
-
-    // 6. LIKES (MỚI THÊM) - Lưu bài hát yêu thích
+    // 6. Bảng Likes (Yêu thích)
     db.run(`CREATE TABLE IF NOT EXISTS likes (
         user_id INTEGER NOT NULL,
         song_id INTEGER NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (user_id, song_id), -- Một người chỉ like 1 bài 1 lần
+        PRIMARY KEY (user_id, song_id),
         FOREIGN KEY(user_id) REFERENCES users(id),
         FOREIGN KEY(song_id) REFERENCES songs(id)
     )`);
@@ -86,7 +87,7 @@ db.serialize(() => {
     // User: user1 / 123456
     db.run("INSERT OR IGNORE INTO users (username, password, role, is_locked) VALUES ('user1', '123456', 'user', 0)");
 
-    // Thêm Nhạc mẫu
+    // Thêm Nhạc mẫu (Chỉ thêm nếu chưa có bài nào)
     db.get("SELECT count(*) as count FROM songs", (err, row) => {
         if (err) {
             console.error(err.message);
@@ -94,20 +95,20 @@ db.serialize(() => {
         }
 
         if (row.count === 0) {
-            const stmt = db.prepare("INSERT INTO songs (title, artist, file_path, image_path) VALUES (?, ?, ?, ?)");
+            const stmt = db.prepare("INSERT INTO songs (title, artist, file_path, image_path, video_path, genre, lyrics, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             
-            // --- SỬA TÊN FILE Ở ĐÂY CHO KHỚP VỚI THƯ MỤC PUBLIC CỦA BẠN ---
-            // Lưu ý: Nếu bạn có file ad.png thì sửa cover.jpg thành ad.png
-            stmt.run("Bài Hát Demo 1", "Sơn Tùng MTP", "bai1.mp3", "ad.png");
-            stmt.run("Bài Hát Demo 2", "MONO", "bai2.mp3", "ad.png");
+            // Dữ liệu mẫu (Sửa tên file cho đúng với máy bạn nếu cần)
+            // Cú pháp: Title, Artist, File MP3, File Ảnh, File Video, Genre, Lyrics, Year
+            stmt.run("Bài Hát Demo 1", "Sơn Tùng MTP", "bai1.mp3", "ad.png", null, "Pop", "Lời bài hát demo...", 2024);
+            stmt.run("Bài Hát Demo 2", "MONO", "bai2.mp3", "ad.png", null, "R&B", "Em xinh đẹp quá...", 2023);
             
             stmt.finalize(() => {
-                console.log("✅ Đã thêm nhạc mẫu.");
-                closeDB(); // Đóng kết nối sau khi xong
+                console.log("✅ Đã thêm nhạc mẫu thành công.");
+                closeDB();
             });
         } else {
-            console.log("ℹ️ Nhạc đã có sẵn, không thêm mới.");
-            closeDB(); // Đóng kết nối nếu không làm gì
+            console.log("ℹ️ Dữ liệu đã có sẵn. Không ghi đè.");
+            closeDB();
         }
     });
 });

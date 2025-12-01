@@ -1,6 +1,6 @@
 /**
  * src/routes/api.js
- * Định nghĩa đường dẫn API (Full features: Video, Upload, Like, Playlist...)
+ * Định nghĩa đường dẫn API (Full features: Video, Upload, Like, Playlist, Edit Song...)
  */
 
 const express = require('express');
@@ -12,7 +12,7 @@ const path = require('path');
 const authCtrl = require('../controllers/authController');
 const songCtrl = require('../controllers/songController');
 const playCtrl = require('../controllers/playlistController');
-const likeCtrl = require('../controllers/likeController'); // <-- Quan trọng: Import Controller Like
+const likeCtrl = require('../controllers/likeController');
 
 // Import Middleware kiểm tra quyền
 const { checkUser, checkAdmin } = require('../middleware/auth');
@@ -26,16 +26,13 @@ const storage = multer.diskStorage({
             cb(null, 'public/images/');
         } else if (file.mimetype.startsWith('audio/')) {
             cb(null, 'public/music/');
-        } 
-        // Thêm trường hợp cho Video
-        else if (file.mimetype.startsWith('video/')) {
+        } else if (file.mimetype.startsWith('video/')) {
             cb(null, 'public/videos/');
         } else {
             cb(new Error('File không hợp lệ!'), false);
         }
     },
     filename: function (req, file, cb) {
-        // Đặt tên file: thời gian hiện tại + tên gốc
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
@@ -43,7 +40,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // ============================================================
-// 1. AUTHENTICATION (Đăng ký / Đăng nhập)
+// 1. AUTHENTICATION
 // ============================================================
 router.post('/register', authCtrl.register);
 router.post('/login', authCtrl.login);
@@ -58,11 +55,14 @@ router.put('/admin/users/lock/:id', checkAdmin, authCtrl.toggleLockUser);
 // ============================================================
 // 3. QUẢN LÝ NHẠC (SONGS)
 // ============================================================
+// Lấy danh sách nhạc (Có hỗ trợ tìm kiếm ?q=...)
 router.get('/songs', songCtrl.getAllSongs);
-router.get('/stream/:id', songCtrl.streamSong);
-router.get('/stream-video/:id', songCtrl.streamVideo); // API Phát Video
 
-// Admin: Thêm nhạc mới (Có Upload Nhạc, Ảnh, Video)
+// Phát nhạc & Video
+router.get('/stream/:id', songCtrl.streamSong);
+router.get('/stream-video/:id', songCtrl.streamVideo);
+
+// Admin: Thêm nhạc mới (Upload Nhạc + Ảnh + Video)
 router.post('/admin/songs/add', 
     checkAdmin, 
     upload.fields([
@@ -73,6 +73,11 @@ router.post('/admin/songs/add',
     songCtrl.addSongAdmin
 );
 
+// Admin: Cập nhật thông tin nhạc (MỚI THÊM)
+// Lưu ý: API này dùng method PUT và không cần upload file (chỉ sửa thông tin text)
+router.put('/admin/songs/update/:id', checkAdmin, songCtrl.updateSongAdmin);
+
+// Admin: Xóa nhạc
 router.delete('/admin/songs/:id', checkAdmin, songCtrl.deleteSong);
 
 // ============================================================
