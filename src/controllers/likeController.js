@@ -16,15 +16,16 @@ exports.toggleLike = (req, res) => {
 
         if (row) {
             // Nếu đã like rồi -> Xóa (Unlike)
-            db.run("DELETE FROM likes WHERE user_id = ? AND song_id = ?", [userId, song_id], (err) => {
+            // Dùng function thường để có thể truy cập this.changes (số dòng bị xóa)
+            db.run("DELETE FROM likes WHERE user_id = ? AND song_id = ?", [userId, song_id], function(err) {
                 if(err) return res.status(500).json({ error: err.message });
-                res.json({ message: "Unliked", status: false }); // status false = chưa like
+                res.json({ message: "Đã bỏ thích", status: false }); // status false = chưa like
             });
         } else {
             // Nếu chưa like -> Thêm (Like)
-            db.run("INSERT INTO likes (user_id, song_id) VALUES (?, ?)", [userId, song_id], (err) => {
+            db.run("INSERT INTO likes (user_id, song_id) VALUES (?, ?)", [userId, song_id], function(err) {
                 if(err) return res.status(500).json({ error: err.message });
-                res.json({ message: "Liked", status: true }); // status true = đã like
+                res.json({ message: "Đã thích", status: true }); // status true = đã like
             });
         }
     });

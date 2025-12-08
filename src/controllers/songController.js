@@ -1,6 +1,6 @@
 /**
  * src/controllers/songController.js
- * Xử lý logic bài hát: Tìm kiếm thông minh (Tiếng Việt), Phát nhạc, Upload...
+ * Xử lý logic bài hát: Tìm kiếm, Phát nhạc/Video, Upload Thêm/Sửa/Xóa/Ẩn nhạc
  */
 
 const db = require('../config/database');
@@ -8,35 +8,22 @@ const fs = require('fs');
 const path = require('path');
 
 // --- HÀM PHỤ: XÓA DẤU TIẾNG VIỆT ---
-// Giúp biến "Lạc Trôi" -> "lac troi" để so sánh
 function removeVietnameseTones(str) {
     if (!str) return "";
-    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-    str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-    str = str.replace(/đ/g, "d");
-    str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
-    str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
-    str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
-    str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
-    str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
-    str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
-    str = str.replace(/Đ/g, "D");
-    // Kết hợp các dấu thanh (nếu có tổ hợp)
     str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    str = str.replace(/đ/g, "d").replace(/Đ/g, "D");
     return str;
 }
 
-// 1. Lấy danh sách bài hát (TÌM KIẾM THÔNG MINH)
+// 1. Lấy danh sách bài hát (CÓ TÌM KIẾM + PHÂN QUYỀN ẨN/HIỆN)
 exports.getAllSongs = (req, res) => {
     const protocol = req.protocol;
     const host = req.get('host');
-    const searchQuery = req.query.q; // Từ khóa người dùng nhập
+    const searchQuery = req.query.q;
+    
+    // Lấy Role từ Header
+    const userRole = req.headers['x-user-role'];
 
-    // Lấy TẤT CẢ bài hát lên trước, sau đó lọc bằng JS
     db.all("SELECT * FROM songs", [], (err, rows) => {
         if (err) {
             if(err.message.includes('no such table')) return res.json({data:[]});
@@ -45,23 +32,24 @@ exports.getAllSongs = (req, res) => {
 
         let songs = rows;
 
-        // --- LOGIC TÌM KIẾM GẦN ĐÚNG ---
-        if (searchQuery) {
-            // 1. Chuyển từ khóa tìm kiếm về dạng không dấu, chữ thường
-            const keyword = removeVietnameseTones(searchQuery).toLowerCase().trim();
+        // --- LỌC BÀI ẨN (LOGIC BẠN YÊU CẦU) ---
+        // Nếu không phải Admin VÀ không phải Manager thì mới lọc bỏ bài ẩn
+        // Tức là: User thường sẽ không thấy, còn Admin và Manager đều thấy
+        if (userRole !== 'admin' && userRole !== 'manager') {
+            songs = songs.filter(s => s.is_hidden !== 1);
+        }
 
-            // 2. Lọc danh sách
+        // --- TÌM KIẾM ---
+        if (searchQuery) {
+            const keyword = removeVietnameseTones(searchQuery).toLowerCase().trim();
             songs = songs.filter(song => {
-                // Chuyển tên bài hát và ca sĩ trong DB về dạng không dấu
                 const titleNorm = removeVietnameseTones(song.title).toLowerCase();
                 const artistNorm = removeVietnameseTones(song.artist).toLowerCase();
-
-                // Kiểm tra xem có chứa từ khóa không
                 return titleNorm.includes(keyword) || artistNorm.includes(keyword);
             });
         }
 
-        //XỬ LÝ ẢNH & URL 
+        // --- XỬ LÝ ẢNH & URL ---
         const result = songs.map(song => {
             let finalImage;
             if (!song.image_path || song.image_path.trim() === "") {
@@ -84,7 +72,7 @@ exports.getAllSongs = (req, res) => {
     });
 };
 
-// 2. Stream nhạc (Hỗ trợ tua)
+// 2. Stream nhạc
 exports.streamSong = (req, res) => {
     const songId = req.params.id;
     db.get("SELECT file_path FROM songs WHERE id = ?", [songId], (err, row) => {
@@ -142,7 +130,8 @@ exports.addSongAdmin = (req, res) => {
         const musicFilename = req.files['musicFile'][0].filename;
         const imageFilename = req.files['imageFile'] ? req.files['imageFile'][0].filename : "";
         const videoFilename = req.files['videoFile'] ? req.files['videoFile'][0].filename : null;
-        db.run("INSERT INTO songs (title, artist, file_path, image_path, video_path, genre, year, lyrics) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+        
+        db.run("INSERT INTO songs (title, artist, file_path, image_path, video_path, genre, year, lyrics, is_hidden) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)", 
             [title, artist, musicFilename, imageFilename, videoFilename, genre, year, lyrics], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: "Thêm thành công!", id: this.lastID });
@@ -161,7 +150,20 @@ exports.updateSongAdmin = (req, res) => {
     });
 };
 
-// 6. Admin Delete
+// 6. Admin Ẩn/Hiện
+exports.toggleHideSong = (req, res) => {
+    const songId = req.params.id;
+    db.get("SELECT is_hidden FROM songs WHERE id = ?", [songId], (err, row) => {
+        if (!row) return res.status(404).json({ error: "Không tìm thấy" });
+        const newStatus = row.is_hidden === 1 ? 0 : 1;
+        db.run("UPDATE songs SET is_hidden = ? WHERE id = ?", [newStatus, songId], (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: newStatus === 1 ? "Đã ẨN bài hát" : "Đã HIỆN bài hát" });
+        });
+    });
+};
+
+// 7. Admin Delete
 exports.deleteSong = (req, res) => {
     const songId = req.params.id;
     db.run("DELETE FROM songs WHERE id = ?", [songId], function(err) {

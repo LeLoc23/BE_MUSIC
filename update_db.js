@@ -1,6 +1,6 @@
 /**
- * update_db_v2.js
- * Chức năng: Thêm cột genre, lyrics, year vào bảng songs
+ * update_db_stats.js
+ * Chức năng: Thêm cột listen_count (đếm lượt nghe)
  */
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
@@ -8,23 +8,17 @@ const dbPath = path.resolve(__dirname, 'database.db');
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
-    console.log("🔄 Đang cập nhật Database V2...");
+    console.log("📊 Đang cập nhật Database cho thống kê...");
 
-    const columns = [
-        "ALTER TABLE songs ADD COLUMN genre TEXT DEFAULT 'Pop'",
-        "ALTER TABLE songs ADD COLUMN lyrics TEXT DEFAULT ''",
-        "ALTER TABLE songs ADD COLUMN year INTEGER DEFAULT 2024"
-    ];
-
-    columns.forEach(cmd => {
-        db.run(cmd, (err) => {
-            if (err && !err.message.includes('duplicate column')) {
-                console.error("Lỗi:", err.message);
-            } else {
-                console.log("✅ Đã cập nhật cột mới.");
-            }
-        });
+    // Thêm cột listen_count, mặc định là 0
+    db.run("ALTER TABLE songs ADD COLUMN listen_count INTEGER DEFAULT 0", (err) => {
+        if (err && !err.message.includes('duplicate column')) {
+            console.error("Lỗi:", err.message);
+        } else {
+            console.log("✅ Đã thêm cột 'listen_count' thành công.");
+        }
     });
 });
 
-setTimeout(() => { db.close(); console.log("🏁 Xong!"); }, 1000);
+setTimeout(() => { db.close(); }, 1000);
+

@@ -1,6 +1,6 @@
 /**
  * src/controllers/authController.js
- * Xử lý Đăng ký, Đăng nhập và Quản lý User (Admin)
+ * Xử lý Đăng ký, Đăng nhập, Quản lý User (Admin), Cấp quyền
  */
 
 const db = require('../config/database');
@@ -29,10 +29,7 @@ exports.login = (req, res) => {
     db.get("SELECT * FROM users WHERE username = ? AND password = ?", [username, password], (err, user) => {
         if (err) return res.status(500).json({ error: err.message });
         
-        // Kiểm tra sai tài khoản/mật khẩu
-        if (!user) {
-            return res.status(401).json({ error: "Sai tài khoản hoặc mật khẩu" });
-        }
+        if (!user) return res.status(401).json({ error: "Sai tài khoản hoặc mật khẩu" });
 
         // --- QUAN TRỌNG: KIỂM TRA TÀI KHOẢN CÓ BỊ KHÓA KHÔNG ---
         if (user.is_locked === 1) {
@@ -48,7 +45,7 @@ exports.login = (req, res) => {
 };
 
 // ============================================================
-// 3. CÁC HÀM QUẢN LÝ DÀNH CHO ADMIN (GIỮ LẠI ĐỂ ADMIN DÙNG)
+// 3. CÁC HÀM QUẢN LÝ DÀNH CHO ADMIN
 // ============================================================
 
 // Lấy danh sách tất cả user
@@ -88,5 +85,26 @@ exports.toggleLockUser = (req, res) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: newStatus === 1 ? "Đã KHÓA tài khoản" : "Đã MỞ KHÓA tài khoản" });
         });
+    });
+};
+
+// [MỚI] Cập nhật vai trò người dùng (Thăng chức/Hạ chức)
+exports.updateUserRole = (req, res) => {
+    const targetId = req.params.id;
+    const { role } = req.body; // role sẽ là 'user' hoặc 'manager'
+
+    // Không cho phép chỉnh sửa chính mình
+    if (parseInt(targetId) === req.userId) {
+        return res.status(400).json({ error: "Không thể tự thay đổi quyền của chính mình!" });
+    }
+
+    // Chỉ cho phép set thành 'user' hoặc 'manager'
+    if (role !== 'user' && role !== 'manager') {
+        return res.status(400).json({ error: "Role không hợp lệ!" });
+    }
+
+    db.run("UPDATE users SET role = ? WHERE id = ?", [role, targetId], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: `Đã cập nhật người dùng thành: ${role.toUpperCase()}` });
     });
 };

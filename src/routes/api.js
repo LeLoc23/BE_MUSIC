@@ -1,11 +1,11 @@
 /**
  * src/routes/api.js
- * Định nghĩa đường dẫn API (Full features: Video, Upload, Like, Playlist, Edit Song...)
+ * ĐỊNH NGHĨA ROUTE API (Phiên bản đầy đủ: Phân quyền Admin/Manager/User)
  */
 
 const express = require('express');
 const router = express.Router();
-const multer = require('multer'); // Thư viện upload
+const multer = require('multer');
 const path = require('path');
 
 // Import Controllers
@@ -13,9 +13,10 @@ const authCtrl = require('../controllers/authController');
 const songCtrl = require('../controllers/songController');
 const playCtrl = require('../controllers/playlistController');
 const likeCtrl = require('../controllers/likeController');
+const statsCtrl = require('../controllers/statsController');
 
-// Import Middleware kiểm tra quyền
-const { checkUser, checkAdmin } = require('../middleware/auth');
+// Import Middleware (Đảm bảo file auth.js đã có hàm checkManager)
+const { checkUser, checkAdmin, checkManager } = require('../middleware/auth');
 
 // ============================================================
 // CẤU HÌNH UPLOAD FILE (MULTER)
@@ -46,25 +47,28 @@ router.post('/register', authCtrl.register);
 router.post('/login', authCtrl.login);
 
 // ============================================================
-// 2. ADMIN: QUẢN LÝ NGƯỜI DÙNG
+// 2. ADMIN: QUẢN LÝ NGƯỜI DÙNG (CHỈ ADMIN TỐI CAO)
 // ============================================================
 router.get('/admin/users', checkAdmin, authCtrl.getAllUsers);
 router.delete('/admin/users/:id', checkAdmin, authCtrl.deleteUser);
 router.put('/admin/users/lock/:id', checkAdmin, authCtrl.toggleLockUser);
 
+// Cấp quyền Manager
+router.put('/admin/users/role/:id', checkAdmin, authCtrl.updateUserRole);
+
 // ============================================================
-// 3. QUẢN LÝ NHẠC (SONGS)
+// 3. QUẢN LÝ NHẠC (MANAGER & ADMIN)
 // ============================================================
-// Lấy danh sách nhạc (Có hỗ trợ tìm kiếm ?q=...)
+// Lấy danh sách nhạc
 router.get('/songs', songCtrl.getAllSongs);
 
 // Phát nhạc & Video
 router.get('/stream/:id', songCtrl.streamSong);
 router.get('/stream-video/:id', songCtrl.streamVideo);
 
-// Admin: Thêm nhạc mới (Upload Nhạc + Ảnh + Video)
+// Thêm nhạc mới: Manager được phép làm
 router.post('/admin/songs/add', 
-    checkAdmin, 
+    checkManager, 
     upload.fields([
         { name: 'musicFile', maxCount: 1 }, 
         { name: 'imageFile', maxCount: 1 },
@@ -73,11 +77,13 @@ router.post('/admin/songs/add',
     songCtrl.addSongAdmin
 );
 
-// Admin: Cập nhật thông tin nhạc (MỚI THÊM)
-// Lưu ý: API này dùng method PUT và không cần upload file (chỉ sửa thông tin text)
-router.put('/admin/songs/update/:id', checkAdmin, songCtrl.updateSongAdmin);
+// Cập nhật thông tin nhạc: Manager được phép làm
+router.put('/admin/songs/update/:id', checkManager, songCtrl.updateSongAdmin);
 
-// Admin: Xóa nhạc
+// Ẩn / Hiện nhạc: Manager được phép làm
+router.put('/admin/songs/hide/:id', checkManager, songCtrl.toggleHideSong);
+
+// Xóa nhạc vĩnh viễn: CHỈ ADMIN (Để an toàn tuyệt đối)
 router.delete('/admin/songs/:id', checkAdmin, songCtrl.deleteSong);
 
 // ============================================================
@@ -102,5 +108,16 @@ router.post('/user/history/add', checkUser, playCtrl.addToHistory);
 router.post('/user/likes/toggle', checkUser, likeCtrl.toggleLike);
 router.get('/user/likes', checkUser, likeCtrl.getLikedSongs);
 router.get('/user/likes/ids', checkUser, likeCtrl.getLikedIds);
+
+// ============================================================
+// 7. BÁO CÁO THỐNG KÊ (MANAGER & ADMIN)
+// ============================================================
+// Tăng lượt nghe (Ai cũng gọi được khi play)
+router.post('/songs/listen/:id', statsCtrl.incrementListenCount);
+
+// Xem báo cáo: Manager được phép xem
+router.get('/admin/stats/general', checkManager, statsCtrl.getGeneralStats);
+router.get('/admin/stats/top-listen', checkManager, statsCtrl.getTopListened);
+router.get('/admin/stats/top-like', checkManager, statsCtrl.getTopLiked);
 
 module.exports = router;
