@@ -1,6 +1,6 @@
 /**
  * src/routes/api.js
- * ĐỊNH NGHĨA ROUTE API (Phiên bản đầy đủ: Phân quyền Admin/Manager/User)
+ * FULL VERSION: Auth, Songs, Playlist, History, Likes, Stats, AI Search, Manager Role
  */
 
 const express = require('express');
@@ -14,30 +14,23 @@ const songCtrl = require('../controllers/songController');
 const playCtrl = require('../controllers/playlistController');
 const likeCtrl = require('../controllers/likeController');
 const statsCtrl = require('../controllers/statsController');
+const aiCtrl = require('../controllers/aiController'); // <-- IMPORT AI MỚI
 
-// Import Middleware (Đảm bảo file auth.js đã có hàm checkManager)
+// Import Middleware
 const { checkUser, checkAdmin, checkManager } = require('../middleware/auth');
 
-// ============================================================
-// CẤU HÌNH UPLOAD FILE (MULTER)
-// ============================================================
+// --- CẤU HÌNH UPLOAD ---
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, 'public/images/');
-        } else if (file.mimetype.startsWith('audio/')) {
-            cb(null, 'public/music/');
-        } else if (file.mimetype.startsWith('video/')) {
-            cb(null, 'public/videos/');
-        } else {
-            cb(new Error('File không hợp lệ!'), false);
-        }
+        if (file.mimetype.startsWith('image/')) cb(null, 'public/images/');
+        else if (file.mimetype.startsWith('audio/')) cb(null, 'public/music/');
+        else if (file.mimetype.startsWith('video/')) cb(null, 'public/videos/');
+        else cb(new Error('File không hợp lệ!'), false);
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
-
 const upload = multer({ storage: storage });
 
 // ============================================================
@@ -47,43 +40,34 @@ router.post('/register', authCtrl.register);
 router.post('/login', authCtrl.login);
 
 // ============================================================
-// 2. ADMIN: QUẢN LÝ NGƯỜI DÙNG (CHỈ ADMIN TỐI CAO)
+// 2. ADMIN USER (Chỉ Admin tối cao)
 // ============================================================
 router.get('/admin/users', checkAdmin, authCtrl.getAllUsers);
 router.delete('/admin/users/:id', checkAdmin, authCtrl.deleteUser);
 router.put('/admin/users/lock/:id', checkAdmin, authCtrl.toggleLockUser);
-
-// Cấp quyền Manager
 router.put('/admin/users/role/:id', checkAdmin, authCtrl.updateUserRole);
 
 // ============================================================
-// 3. QUẢN LÝ NHẠC (MANAGER & ADMIN)
+// 3. QUẢN LÝ NHẠC (SONGS)
 // ============================================================
-// Lấy danh sách nhạc
 router.get('/songs', songCtrl.getAllSongs);
-
-// Phát nhạc & Video
 router.get('/stream/:id', songCtrl.streamSong);
 router.get('/stream-video/:id', songCtrl.streamVideo);
 
-// Thêm nhạc mới: Manager được phép làm
+// Thêm nhạc (Manager/Admin)
 router.post('/admin/songs/add', 
     checkManager, 
-    upload.fields([
-        { name: 'musicFile', maxCount: 1 }, 
-        { name: 'imageFile', maxCount: 1 },
-        { name: 'videoFile', maxCount: 1 } 
-    ]), 
+    upload.fields([{ name: 'musicFile', maxCount: 1 }, { name: 'imageFile', maxCount: 1 }, { name: 'videoFile', maxCount: 1 }]), 
     songCtrl.addSongAdmin
 );
 
-// Cập nhật thông tin nhạc: Manager được phép làm
+// Sửa nhạc (Manager/Admin)
 router.put('/admin/songs/update/:id', checkManager, songCtrl.updateSongAdmin);
 
-// Ẩn / Hiện nhạc: Manager được phép làm
+// Ẩn/Hiện nhạc (Manager/Admin)
 router.put('/admin/songs/hide/:id', checkManager, songCtrl.toggleHideSong);
 
-// Xóa nhạc vĩnh viễn: CHỈ ADMIN (Để an toàn tuyệt đối)
+// Xóa nhạc vĩnh viễn (Chỉ Admin)
 router.delete('/admin/songs/:id', checkAdmin, songCtrl.deleteSong);
 
 // ============================================================
@@ -110,14 +94,16 @@ router.get('/user/likes', checkUser, likeCtrl.getLikedSongs);
 router.get('/user/likes/ids', checkUser, likeCtrl.getLikedIds);
 
 // ============================================================
-// 7. BÁO CÁO THỐNG KÊ (MANAGER & ADMIN)
+// 7. BÁO CÁO THỐNG KÊ (Manager/Admin)
 // ============================================================
-// Tăng lượt nghe (Ai cũng gọi được khi play)
 router.post('/songs/listen/:id', statsCtrl.incrementListenCount);
-
-// Xem báo cáo: Manager được phép xem
 router.get('/admin/stats/general', checkManager, statsCtrl.getGeneralStats);
 router.get('/admin/stats/top-listen', checkManager, statsCtrl.getTopListened);
 router.get('/admin/stats/top-like', checkManager, statsCtrl.getTopLiked);
+
+// ============================================================
+// 8. TÌM KIẾM AI (MỚI THÊM)
+// ============================================================
+router.post('/ai/search', aiCtrl.searchByEmotion);
 
 module.exports = router;

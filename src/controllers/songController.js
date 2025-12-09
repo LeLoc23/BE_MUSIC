@@ -15,7 +15,7 @@ function removeVietnameseTones(str) {
     return str;
 }
 
-// 1. Lấy danh sách bài hát (CÓ TÌM KIẾM + PHÂN QUYỀN ẨN/HIỆN)
+// 1. Lấy danh sách bài hát
 exports.getAllSongs = (req, res) => {
     const protocol = req.protocol;
     const host = req.get('host');
@@ -32,9 +32,7 @@ exports.getAllSongs = (req, res) => {
 
         let songs = rows;
 
-        // --- LỌC BÀI ẨN (LOGIC BẠN YÊU CẦU) ---
-        // Nếu không phải Admin VÀ không phải Manager thì mới lọc bỏ bài ẩn
-        // Tức là: User thường sẽ không thấy, còn Admin và Manager đều thấy
+       
         if (userRole !== 'admin' && userRole !== 'manager') {
             songs = songs.filter(s => s.is_hidden !== 1);
         }
