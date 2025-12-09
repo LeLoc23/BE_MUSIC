@@ -1,0 +1,16 @@
+# Bỏ qua thư viện nặng
+node_modules/
+
+# Bỏ qua file biến môi trường (bảo mật)
+.env
+
+# Bỏ qua các file hệ thống máy tính
+.DS_Store
+Thumbs.db
+
+# Bỏ qua file database (để tránh xung đột mỗi khi chạy code)
+# Vì bạn có file init_db.js để tạo DB rồi, không cần up file này lên nữa
+database.db
+
+# Bỏ qua file log lỗi
+npm-debug.log*

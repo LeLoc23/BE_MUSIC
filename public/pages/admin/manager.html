@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản trị hệ thống - BE_MUSIC</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    </head>
+<body>
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <h2>Admin Panel</h2>
+            <ul>
+                <li><a href="#" class="active">Quản lý nhạc</a></li>
+                <li><a href="#">Thống kê (Coming soon)</a></li>
+                <li><a href="../user/home.html">Về trang nghe nhạc</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-content">
+            <header>
+                <h1>Kho Nhạc</h1>
+                <button id="btnAddSong" class="btn-primary">+ Thêm bài hát mới</button>
+            </header>
+
+            <div id="songForm" class="form-container" style="display:none; border: 1px solid #ddd; padding: 20px; margin-bottom: 20px;">
+                <h3>Nhập thông tin bài hát</h3>
+                <input type="text" id="title" placeholder="Tên bài hát">
+                <input type="text" id="artist" placeholder="Ca sĩ">
+                <input type="text" id="emotion" placeholder="Cảm xúc (Vui/Buồn...)">
+                <input type="text" id="url" placeholder="Link nhạc (URL)">
+                <button id="saveBtn">Lưu lại</button>
+                <button onclick="document.getElementById('songForm').style.display='none'">Hủy</button>
+            </div>
+
+            <table class="data-table" border="1" width="100%" cellspacing="0" cellpadding="10">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên bài hát</th>
+                        <th>Ca sĩ</th>
+                        <th>Cảm xúc</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="adminSongList">
+                    </tbody>
+            </table>
+        </main>
+    </div>
+
+    <script>
+        console.log("Đây là trang Admin");
+    </script>
+</body>
+</html>

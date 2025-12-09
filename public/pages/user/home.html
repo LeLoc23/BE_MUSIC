@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BE_MUSIC - Nghe nhạc trực tuyến</title>
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+    <header class="user-header">
+        <div class="logo">BE_MUSIC</div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Tìm tên bài hát, cảm xúc...">
+            <button onclick="searchSong()">Tìm</button>
+        </div>
+        <a href="../admin/manager.html" class="nav-link">Trang Admin</a>
+    </header>
+
+    <main class="container">
+        <h2>Bài hát nổi bật</h2>
+        <div id="songList" class="song-grid">
+            </div>
+    </main>
+
+    <footer class="music-player">
+        <div class="track-info">
+            <span id="currentSongTitle">Chưa chọn bài hát</span>
+        </div>
+        <div class="controls">
+            <button id="prevBtn">⏮</button>
+            <button id="playBtn">▶</button>
+            <button id="nextBtn">⏭</button>
+        </div>
+        <audio id="audioPlayer" controls hidden></audio>
+    </footer>
+
+    <script>
+        console.log("Đây là trang User");
+        // Sau này code JS sẽ tách ra file riêng
+    </script>
+</body>
+</html>
