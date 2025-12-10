@@ -1,8 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // 👇 DÁN KEY CỦA BẠN VÀO ĐÂY
-const genAI = new GoogleGenerativeAI("AIzaSyB0de4y6mfEtrQOUYGMQUFmUnxj9frsCdM");
-
+const genAI = new GoogleGenerativeAI("API KEY");
 async function checkAvailableModels() {
   try {
     console.log("⏳ Đang hỏi Google danh sách Model...");

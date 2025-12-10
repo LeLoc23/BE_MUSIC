@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tùy chỉnh thanh cuộn (Scrollbar) chuẩn ZingMP3 */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #170f23; 
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #432275; /* Màu tím trầm */
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #7200a1; /* Sáng lên khi di chuột vào */
+  }
+  
+  body {
+    @apply bg-main-bg text-white; /* Mặc định toàn trang nền tối, chữ trắng */
+  }
+}
