@@ -7,7 +7,7 @@ const OpenAI = require('openai');
 
 // 👇 DÁN KEY CỦA BẠN VÀO ĐÂY
 const openai = new OpenAI({
-    apiKey: "API KEY" 
+    apiKey: "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" 
 });
 
 exports.searchByEmotion = async (req, res) => {
