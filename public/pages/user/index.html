@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BE_MUSIC - Smart Touch</title>
+    <title>BE_MUSIC - Final Fixed</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -43,16 +43,18 @@
                     <i class="fa-solid fa-house mr-4 text-xl w-6 text-center"></i><span class="font-medium">Trang Chủ</span>
                 </a>
                 
-                <div class="mt-6 px-4 text-xs font-bold text-gray-500 uppercase mb-2">Thư viện</div>
-                <a href="#" onclick="switchTab('likes')" id="tab-likes" class="nav-item flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-md transition">
-                    <i class="fa-solid fa-heart mr-4 text-xl w-6 text-center"></i><span class="font-medium">Yêu thích</span>
-                </a>
-                <a href="#" onclick="switchTab('playlists')" id="tab-playlists" class="nav-item flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-md transition">
-                    <i class="fa-solid fa-folder-open mr-4 text-xl w-6 text-center"></i><span class="font-medium">Playlist</span>
-                </a>
-                <a href="#" onclick="switchTab('history')" id="tab-history" class="nav-item flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-md transition">
-                    <i class="fa-solid fa-clock-rotate-left mr-4 text-xl w-6 text-center"></i><span class="font-medium">Lịch sử</span>
-                </a>
+                <div id="libraryMenu" class="hidden">
+                    <div class="mt-6 px-4 text-xs font-bold text-gray-500 uppercase mb-2">Thư viện</div>
+                    <a href="#" onclick="switchTab('likes')" id="tab-likes" class="nav-item flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-md transition">
+                        <i class="fa-solid fa-heart mr-4 text-xl w-6 text-center"></i><span class="font-medium">Yêu thích</span>
+                    </a>
+                    <a href="#" onclick="switchTab('playlists')" id="tab-playlists" class="nav-item flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-md transition">
+                        <i class="fa-solid fa-folder-open mr-4 text-xl w-6 text-center"></i><span class="font-medium">Playlist</span>
+                    </a>
+                    <a href="#" onclick="switchTab('history')" id="tab-history" class="nav-item flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-md transition">
+                        <i class="fa-solid fa-clock-rotate-left mr-4 text-xl w-6 text-center"></i><span class="font-medium">Lịch sử</span>
+                    </a>
+                </div>
 
                 <div id="managerMenu" class="hidden mt-6 border-t border-white/10 pt-4">
                     <p class="px-4 text-xs font-bold text-orange-500 uppercase mb-2">Quản Lý</p>
@@ -75,12 +77,12 @@
                         </div>
                         <div id="loginForm">
                             <input type="text" id="loginUser" placeholder="Username" class="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-xs mb-2 text-white">
-                            <input type="password" id="loginPass" placeholder="Password" class="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-xs mb-2 text-white">
+                            <input type="password" id="loginPass" placeholder="Password" class="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-xs mb-2 text-white" onkeydown="if(event.key === 'Enter') doLogin()">
                             <button onclick="doLogin()" class="w-full bg-white/10 hover:bg-white/20 text-white text-xs py-1 rounded">Đăng nhập</button>
                         </div>
                         <div id="regForm" class="hidden">
                             <input type="text" id="regUser" placeholder="New User" class="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-xs mb-2 text-white">
-                            <input type="password" id="regPass" placeholder="New Pass" class="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-xs mb-2 text-white">
+                            <input type="password" id="regPass" placeholder="New Pass" class="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-xs mb-2 text-white" onkeydown="if(event.key === 'Enter') doRegister()">
                             <button onclick="doRegister()" class="w-full bg-green-600 hover:bg-green-700 text-white text-xs py-1 rounded">Đăng ký</button>
                         </div>
                         <p id="authMsg" class="text-red-500 text-[10px] mt-1 text-center"></p>
@@ -112,10 +114,22 @@
             </header>
 
             <div class="px-8 pb-32 pt-6">
-                <h2 id="sectionTitle" class="text-xl font-bold mb-5 text-white flex items-center gap-2">
-                    <span id="pageName">Kho Nhạc</span> 
-                    <button id="createPlBtn" onclick="createPlaylist()" class="hidden text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded ml-3 border border-white/10"><i class="fa-solid fa-plus mr-1"></i> Tạo Playlist</button>
-                </h2>
+                <div class="flex justify-between items-center mb-5">
+                    <h2 id="sectionTitle" class="text-xl font-bold text-white flex items-center gap-2">
+                        <span id="pageName">Kho Nhạc</span> 
+                        <button id="createPlBtn" onclick="createPlaylist()" class="hidden text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded ml-3 border border-white/10"><i class="fa-solid fa-plus mr-1"></i> Tạo Playlist</button>
+                    </h2>
+                    
+                    <div class="flex gap-2">
+                        <button class="tab-btn active bg-white/5 text-white border-l-4 border-primary px-3 py-1 rounded" id="btnAll" onclick="switchTab('all')">Kho Nhạc</button>
+                        <button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded hidden" id="btnLikes" onclick="switchTab('likes')">Yêu Thích</button>
+                        <button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded hidden" id="btnPl" onclick="switchTab('playlists')">Playlist</button>
+                        <button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded hidden" id="btnHistory" onclick="switchTab('history')">Lịch Sử</button>
+                        
+                        <button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded hidden" id="btnUsers" onclick="switchTab('users')">Users</button>
+                        <button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded hidden" id="btnStats" onclick="switchTab('stats')">Thống Kê</button>
+                    </div>
+                </div>
                 
                 <div id="mainContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
                     <div class="col-span-full text-center py-20 text-gray-500">Vui lòng đăng nhập...</div>
@@ -167,7 +181,7 @@
             </div>
         </div>
         <div class="flex items-center w-[30%] justify-end gap-4">
-            <button onclick="document.getElementById('lyricsModal').classList.remove('hidden')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-microphone"></i></button>
+            <button onclick="document.getElementById('lyricsModal').classList.remove('hidden')" class="text-gray-400 hover:text-white" title="Xem lời bài hát"><i class="fa-solid fa-microphone"></i></button>
         </div>
         <audio id="audioPlayer" hidden></audio>
     </footer>
@@ -191,6 +205,26 @@
                 <div class="flex gap-3 mt-4">
                     <button onclick="addSong()" class="flex-1 bg-primary text-white py-2 rounded font-bold">Upload</button>
                     <button onclick="toggleAdminModal()" class="flex-1 bg-gray-600 text-white py-2 rounded">Hủy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editSongModal" class="fixed inset-0 bg-black/80 hidden z-[60] flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-sidebar-bg w-[500px] rounded-xl border border-white/10 p-6 shadow-2xl modal-enter">
+            <h3 class="text-xl font-bold text-white mb-4">Chỉnh sửa Bài Hát</h3>
+            <input type="hidden" id="editId">
+            <div class="space-y-3">
+                <input type="text" id="editTitle" placeholder="Tên bài hát" class="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-white">
+                <input type="text" id="editArtist" placeholder="Ca sĩ" class="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-white">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="editGenre" placeholder="Thể loại" class="bg-black/30 border border-white/10 rounded px-3 py-2 text-white">
+                    <input type="number" id="editYear" placeholder="Năm" class="bg-black/30 border border-white/10 rounded px-3 py-2 text-white">
+                </div>
+                <textarea id="editLyrics" rows="4" placeholder="Lời bài hát" class="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-white"></textarea>
+                <div class="flex gap-3 mt-4">
+                    <button onclick="submitEditSong()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-bold">Lưu thay đổi</button>
+                    <button onclick="document.getElementById('editSongModal').classList.add('hidden')" class="flex-1 bg-gray-600 text-white py-2 rounded">Hủy</button>
                 </div>
             </div>
         </div>
@@ -246,14 +280,26 @@
         function updateUI(isLogin) {
             document.getElementById('authSection').classList.toggle('hidden', isLogin);
             document.getElementById('userDisplay').classList.toggle('hidden', !isLogin);
+            
+            // Toggle Sidebar Menu
+            document.getElementById('libraryMenu').classList.toggle('hidden', !isLogin);
+            
+            // Toggle Top Nav Buttons
+            const tabs = ['btnLikes', 'btnPl', 'btnHistory'];
+            tabs.forEach(id => document.getElementById(id).classList.toggle('hidden', !isLogin));
+
             if(isLogin) {
                 document.getElementById('userNameDisplay').innerText = currentUser.username;
                 document.getElementById('userRoleDisplay').innerText = currentUser.role;
                 const isAdmin = currentUser.role === 'admin';
                 const isManager = currentUser.role === 'manager';
+                
                 document.getElementById('managerMenu').classList.toggle('hidden', !(isAdmin || isManager));
                 document.getElementById('uploadBtn').classList.toggle('hidden', !(isAdmin || isManager));
                 document.getElementById('adminMenu').classList.toggle('hidden', !isAdmin);
+                
+                document.getElementById('btnUsers').classList.toggle('hidden', !isAdmin);
+                document.getElementById('btnStats').classList.toggle('hidden', !(isAdmin || isManager));
             }
         }
 
@@ -266,9 +312,22 @@
             if(type === 'users' && (!currentUser || currentUser.role !== 'admin')) return alert("Cấm truy cập!");
             if(type === 'stats' && (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'manager'))) return alert("Cấm truy cập!");
 
-            document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('bg-white/5', 'text-white', 'border-l-4', 'border-primary'); el.classList.add('text-gray-400'); });
-            document.getElementById(`tab-${type}`).classList.add('bg-white/5', 'text-white', 'border-l-4', 'border-primary');
-            document.getElementById(`tab-${type}`).classList.remove('text-gray-400');
+            // Update Tab Style (Top Nav)
+            document.querySelectorAll('.tab-btn').forEach(el => { 
+                el.classList.remove('bg-white/5', 'text-white', 'border-l-4', 'border-primary'); 
+                el.classList.add('text-gray-400'); 
+            });
+            const activeBtn = document.getElementById(`btn${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            if(activeBtn) {
+                activeBtn.classList.add('bg-white/5', 'text-white', 'border-l-4', 'border-primary');
+                activeBtn.classList.remove('text-gray-400');
+            }
+
+            // Update Sidebar Link
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('bg-white/5', 'text-white', 'border-l-4', 'border-primary'));
+            const sideTab = document.getElementById(`tab-${type}`);
+            if(sideTab) sideTab.classList.add('bg-white/5', 'text-white', 'border-l-4', 'border-primary');
+
             
             document.getElementById('mainContainer').classList.remove('hidden');
             document.getElementById('searchSplitView').classList.add('hidden');
@@ -276,12 +335,37 @@
             const container = document.getElementById('mainContainer');
             container.innerHTML = '<div class="col-span-full text-center py-20 text-gray-500"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
             
-            if(type === 'all') { document.getElementById('pageName').innerText = "Kho Nhạc"; container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"; loadSongs(); }
-            else if(type === 'likes') { document.getElementById('pageName').innerText = "Yêu Thích"; container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"; loadLikedSongs(); }
-            else if(type === 'playlists') { document.getElementById('pageName').innerText = "Playlist"; document.getElementById('createPlBtn').classList.remove('hidden'); container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"; loadPlaylists(); }
-            else if(type === 'history') { document.getElementById('pageName').innerText = "Lịch Sử"; container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"; loadHistory(); }
-            else if(type === 'users') { document.getElementById('pageName').innerText = "Quản Lý Users"; container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"; loadUsers(); }
-            else if(type === 'stats') { document.getElementById('pageName').innerText = "Thống Kê"; container.className = "block"; loadStats(); }
+            if(type === 'all') { 
+                document.getElementById('pageName').innerText = "Kho Nhạc"; 
+                container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6";
+                loadSongs(); 
+            }
+            else if(type === 'likes') { 
+                document.getElementById('pageName').innerText = "Yêu Thích"; 
+                container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6";
+                loadLikedSongs(); 
+            }
+            else if(type === 'playlists') { 
+                document.getElementById('pageName').innerText = "Playlist"; 
+                document.getElementById('createPlBtn').classList.remove('hidden'); 
+                container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"; 
+                loadPlaylists(); 
+            }
+            else if(type === 'history') { 
+                document.getElementById('pageName').innerText = "Lịch Sử"; 
+                container.className = "flex flex-col gap-2";
+                loadHistory(); 
+            }
+            else if(type === 'users') { 
+                document.getElementById('pageName').innerText = "Quản Lý Users"; 
+                container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"; 
+                loadUsers(); 
+            }
+            else if(type === 'stats') { 
+                document.getElementById('pageName').innerText = "Thống Kê"; 
+                container.className = "block"; 
+                loadStats(); 
+            }
         }
 
         // --- FETCHING ---
@@ -289,9 +373,13 @@
         async function loadSongs() { await fetchLikedIds(); const res = await fetch(`${API_URL}/songs`); const json = await res.json(); renderGrid(json.data, 'song'); }
         async function loadLikedSongs() { await fetchLikedIds(); const res = await fetch(`${API_URL}/user/likes`, { headers: { 'X-User-ID': currentUser.id } }); const json = await res.json(); renderGrid(json.data, 'song'); }
         async function loadPlaylists() { const res = await fetch(`${API_URL}/user/playlists`, {headers:{'X-User-ID':currentUser.id}}); const json = await res.json(); renderGrid(json.data, 'playlist'); }
-        async function loadHistory() { const res = await fetch(`${API_URL}/user/history`,{headers:{'X-User-ID':currentUser.id}}); const json = await res.json(); renderGrid(json.data, 'song'); }
+        async function loadHistory() { 
+            const res = await fetch(`${API_URL}/user/history`,{headers:{'X-User-ID':currentUser.id}}); 
+            const json = await res.json(); 
+            renderHistoryList(json.data);
+        }
 
-        // --- RENDER GRID ---
+        // --- RENDER GRID (SONG/PLAYLIST) ---
         function renderGrid(data, type) {
             const container = document.getElementById('mainContainer');
             container.innerHTML = "";
@@ -301,23 +389,24 @@
                 const div = document.createElement('div');
                 div.className = "bg-white/5 hover:bg-white/10 rounded-lg p-4 transition group cursor-pointer border border-transparent hover:border-white/10 relative";
                 
-                // CLICK CARD EVENT: Click anywhere to play (except buttons)
                 div.onclick = (e) => {
-                    // Nếu click vào nút (button/icon) thì không phát nhạc ở đây (nút tự xử lý)
                     if (e.target.closest('button') || e.target.closest('i') && e.target.tagName !== 'DIV') return;
-                    
-                    if(type === 'song') {
-                        playSong(item.id, item.title, item.artist, item.stream_url, item.image_url, item.lyrics||'');
-                    } else if (type === 'playlist') {
-                        viewPlaylist(item.id, item.name);
-                    }
+                    if(type === 'song') playSong(item.id, item.title, item.artist, item.stream_url, item.image_url, item.lyrics||'');
+                    else if (type === 'playlist') viewPlaylist(item.id, item.name);
                 };
 
                 if(type === 'song') {
                     const isLiked = likedSongIds.includes(item.id);
                     const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'manager');
-                    let adminActions = canManage ? `<button onclick="deleteSongAdmin(${item.id})" class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500 hover:text-white z-20 relative"><i class="fa-solid fa-trash"></i></button>` : '';
-                    let videoBtn = item.video_url ? `<button onclick="openVideo('${item.video_url}')" class="text-gray-500 hover:text-purple-400 z-20 relative"><i class="fa-solid fa-video"></i></button>` : '';
+                    let adminActions = '';
+                    if(canManage) {
+                        const sData = JSON.stringify(item).replace(/"/g, '&quot;');
+                        adminActions = `
+                            <button onclick="openEditSong(event, ${sData})" class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded hover:bg-blue-500 hover:text-white mr-1"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteSongAdmin(${item.id})" class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500 hover:text-white"><i class="fa-solid fa-trash"></i></button>
+                        `;
+                    }
+                    let videoBtn = item.video_url ? `<button onclick="openVideo('${item.video_url}')" class="text-gray-500 hover:text-purple-400 mr-2 z-20 relative"><i class="fa-solid fa-video"></i></button>` : '';
 
                     div.innerHTML = `
                         <div class="relative mb-3 aspect-square">
@@ -347,7 +436,35 @@
             });
         }
 
-        // --- 5. SEARCH & AI (HYBRID) ---
+        function renderHistoryList(data) {
+            const container = document.getElementById('mainContainer');
+            container.innerHTML = "";
+            if(!data || data.length === 0) return container.innerHTML = "<div class='text-center text-gray-500'>Chưa có lịch sử.</div>";
+
+            data.forEach(item => {
+                const timeStr = item.played_at ? new Date(item.played_at).toLocaleString('vi-VN') : "Vừa xong";
+                const div = document.createElement('div');
+                div.className = "flex items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer group border border-transparent hover:border-white/10";
+                div.onclick = () => playSong(item.song_id, item.title, item.artist, item.stream_url, item.image_url, item.lyrics);
+
+                div.innerHTML = `
+                    <div class="w-12 h-12 rounded overflow-hidden mr-4"><img src="${item.image_url}" class="w-full h-full object-cover"></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-white text-sm truncate">${item.title}</div>
+                        <div class="text-xs text-gray-400 truncate">${item.artist}</div>
+                    </div>
+                    <div class="text-xs text-gray-500 mr-6 italic flex items-center gap-1">
+                        <i class="fa-regular fa-clock"></i> ${timeStr}
+                    </div>
+                    <button class="text-primary opacity-0 group-hover:opacity-100 transition hover:scale-110">
+                        <i class="fa-solid fa-play-circle text-2xl"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // --- SEARCH & AI ---
         function handleEnter(e) { if(e.key === 'Enter') performSearch(); }
         async function performSearch() {
             const query = document.getElementById('searchInput').value.trim();
@@ -374,10 +491,8 @@
                 const aiData = performAILogic(query);
                 aiList.innerHTML = "";
                 document.getElementById('aiAnalysisMsg').innerText = `AI phân tích: "${aiData.mood}"`;
-                
                 aiData.localResults.forEach(s => { s.source = "Local DB"; renderRow(s, aiList, false); });
                 aiData.webResults.forEach(s => { s.source = "Internet"; renderRow(s, aiList, true); });
-
                 if(aiData.localResults.length === 0 && aiData.webResults.length === 0) aiList.innerHTML = "AI không tìm thấy gì.";
             }, 1000);
         }
@@ -413,9 +528,8 @@
             div.className = "flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer group border border-transparent hover:border-white/10";
             const img = isWebLink ? song.image : song.image_url;
             
-            // CLICK ROW EVENT
             div.onclick = (e) => {
-                if (e.target.closest('button')) return; // Ignore button clicks
+                if (e.target.closest('button')) return; 
                 if (isWebLink) {
                     window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(song.title)}`, '_blank');
                 } else {
@@ -442,7 +556,7 @@
             container.appendChild(div);
         }
 
-        // --- 6. USERS & STATS ---
+        // --- ADMIN & STATS ---
         async function loadUsers() {
             const container = document.getElementById('mainContainer');
             const res = await fetch(`${API_URL}/admin/users`, {headers: { 'X-User-ID': currentUser.id, 'X-User-Role': 'admin' }});
@@ -495,10 +609,62 @@
         async function viewPlaylist(id, name) { const res = await fetch(`${API_URL}/user/playlists/${id}`, {headers:{'X-User-ID':currentUser.id}}); const json = await res.json(); document.getElementById('pageName').innerText = `Playlist: ${name}`; renderGrid(json.data, 'song'); }
         async function deletePlaylist(id) { if(confirm("Xóa playlist?")) { await fetch(`${API_URL}/user/playlists/delete/${id}`, {method:'DELETE', headers:{'X-User-ID':currentUser.id}}); loadPlaylists(); } }
         async function openPlaylistModal(songId) { selectedSongId = songId; document.getElementById('playlistModal').classList.remove('hidden'); const list = document.getElementById('modalPlaylistList'); const res = await fetch(`${API_URL}/user/playlists`, {headers:{'X-User-ID':currentUser.id}}); const json = await res.json(); list.innerHTML = ""; json.data.forEach(p => { const div = document.createElement('div'); div.className = "p-2 hover:bg-white/10 cursor-pointer text-white text-sm"; div.innerText = p.name; div.onclick = async () => { await fetch(`${API_URL}/user/playlists/add-song`, {method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({playlist_id:p.id, song_id:selectedSongId})}); alert("Đã thêm!"); document.getElementById('playlistModal').classList.add('hidden'); }; list.appendChild(div); }); }
-        async function deleteSongAdmin(id) { if(confirm("Xóa bài hát?")) { await fetch(`${API_URL}/admin/songs/${id}`, {method:'DELETE', headers:{'X-User-ID':currentUser.id, 'X-User-Role':currentUser.role}}); loadSongs(); } }
-        async function toggleLike(e, id) { e.stopPropagation(); await fetch(`${API_URL}/user/likes/toggle`, {method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({song_id:id})}); loadSongs(); }
+        
+        // ADMIN ACTIONS
+        async function deleteSongAdmin(id) { 
+            event.stopPropagation();
+            if(confirm("Xóa bài hát?")) { 
+                await fetch(`${API_URL}/admin/songs/${id}`, {method:'DELETE', headers:{'X-User-ID':currentUser.id, 'X-User-Role':currentUser.role}}); 
+                loadSongs(); 
+            } 
+        }
+        async function toggleLike(e, id) { 
+            e.stopPropagation(); 
+            await fetch(`${API_URL}/user/likes/toggle`, {method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({song_id:id})}); 
+            // Refresh đúng tab đang đứng
+            if(document.getElementById('pageName').innerText === "Yêu Thích") loadLikedSongs(); else loadSongs();
+        }
         function toggleAdminModal() { document.getElementById('adminModal').classList.toggle('hidden'); }
-        async function addSong() { const formData = new FormData(); formData.append('title', document.getElementById('newTitle').value); formData.append('artist', document.getElementById('newArtist').value); formData.append('genre', document.getElementById('newGenre').value); formData.append('musicFile', document.getElementById('newFile').files[0]); formData.append('imageFile', document.getElementById('newImage').files[0]); try { const res = await fetch(`${API_URL}/admin/songs/add`, {method:'POST', headers:{'X-User-ID':currentUser.id, 'X-User-Role':currentUser.role}, body:formData}); if(res.ok) { alert("Thành công!"); toggleAdminModal(); loadSongs(); }} catch(e) { alert("Lỗi"); } }
+        
+        async function addSong() { 
+            const formData = new FormData(); 
+            formData.append('title', document.getElementById('newTitle').value); 
+            formData.append('artist', document.getElementById('newArtist').value); 
+            formData.append('genre', document.getElementById('newGenre').value); 
+            formData.append('year', document.getElementById('newYear').value);
+            formData.append('lyrics', document.getElementById('newLyrics').value);
+            formData.append('musicFile', document.getElementById('newFile').files[0]); 
+            formData.append('imageFile', document.getElementById('newImage').files[0]); 
+            formData.append('videoFile', document.getElementById('newVideo').files[0]);
+            try { 
+                const res = await fetch(`${API_URL}/admin/songs/add`, {method:'POST', headers:{'X-User-ID':currentUser.id, 'X-User-Role':currentUser.role}, body:formData}); 
+                if(res.ok) { alert("Thành công!"); toggleAdminModal(); loadSongs(); }
+            } catch(e) { alert("Lỗi"); } 
+        }
+
+        function openEditSong(e, song) {
+            e.stopPropagation();
+            document.getElementById('editId').value = song.id;
+            document.getElementById('editTitle').value = song.title;
+            document.getElementById('editArtist').value = song.artist;
+            document.getElementById('editGenre').value = song.genre;
+            document.getElementById('editYear').value = song.year;
+            document.getElementById('editLyrics').value = song.lyrics;
+            document.getElementById('editSongModal').classList.remove('hidden');
+        }
+
+        async function submitEditSong() {
+            const id = document.getElementById('editId').value;
+            const body = {
+                title: document.getElementById('editTitle').value,
+                artist: document.getElementById('editArtist').value,
+                genre: document.getElementById('editGenre').value,
+                year: document.getElementById('editYear').value,
+                lyrics: document.getElementById('editLyrics').value
+            };
+            await fetch(`${API_URL}/admin/songs/update/${id}`, {method:'PUT', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id,'X-User-Role':currentUser.role}, body:JSON.stringify(body)});
+            alert("Đã sửa!"); document.getElementById('editSongModal').classList.add('hidden'); loadSongs();
+        }
 
         // PLAYER CONTROLS
         function playSong(id, title, artist, url, img, lyrics) {
@@ -506,18 +672,61 @@
             document.getElementById('currentArtist').innerText = artist;
             document.getElementById('currentCover').src = img;
             document.getElementById('lyricsContent').innerText = lyrics || "Chưa có lời.";
-            audio.src = url; audio.play(); togglePlay();
-            if(currentUser) fetch(`${API_URL}/user/history/add`, {method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({song_id:id})});
+            
+            const playedAt = new Date().toISOString(); // Lấy thời gian hiện tại
+            
+            audio.src = url; 
+            audio.play(); 
+            togglePlay(); // update icon
+            
+            // Gửi thời gian lên server
+            if(currentUser) fetch(`${API_URL}/user/history/add`, {
+                method:'POST', 
+                headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, 
+                body:JSON.stringify({song_id:id, played_at: playedAt})
+            });
         }
-        function togglePlay() { if(audio.paused) audio.play(); else audio.pause(); }
-        audio.onplay = () => { document.getElementById('playIcon').className = 'fa-solid fa-pause ml-0'; };
-        audio.onpause = () => { document.getElementById('playIcon').className = 'fa-solid fa-play ml-1'; };
-        audio.ontimeupdate = () => { if(audio.duration) progressBar.value = (audio.currentTime / audio.duration) * 100; };
+
+        function togglePlay() { 
+            if(audio.paused) {
+                audio.play(); 
+                document.getElementById('playIcon').className = 'fa-solid fa-pause ml-0';
+            } else {
+                audio.pause(); 
+                document.getElementById('playIcon').className = 'fa-solid fa-play ml-1';
+            }
+        }
+        
+        audio.onloadedmetadata = () => {
+            document.getElementById('duration').innerText = formatTime(audio.duration);
+            document.getElementById('currentTime').innerText = "00:00";
+            progressBar.value = 0;
+        };
+        audio.ontimeupdate = () => {
+            if(audio.duration) {
+                const percent = (audio.currentTime / audio.duration) * 100;
+                progressBar.value = percent;
+                document.getElementById('currentTime').innerText = formatTime(audio.currentTime);
+            }
+        };
         progressBar.oninput = (e) => { audio.currentTime = (audio.duration / 100) * e.target.value; };
+        function formatTime(s) {
+            if(isNaN(s)) return "00:00";
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return `${m}:${sec<10?'0':''}${sec}`;
+        }
         
         // VIDEO
-        function openVideo(url) { document.getElementById('videoModal').classList.remove('hidden'); const v = document.getElementById('videoPlayer'); v.src = url; v.play(); audio.pause(); }
-        function closeVideo() { document.getElementById('videoModal').classList.add('hidden'); document.getElementById('videoPlayer').pause(); }
+        function openVideo(url) { 
+            event.stopPropagation();
+            document.getElementById('videoModal').classList.remove('hidden'); 
+            const v = document.getElementById('videoPlayer'); v.src = url; v.play(); audio.pause(); 
+        }
+        function closeVideo() { 
+            document.getElementById('videoModal').classList.add('hidden'); 
+            document.getElementById('videoPlayer').pause(); 
+        }
 
         loadSongs();
     </script>
