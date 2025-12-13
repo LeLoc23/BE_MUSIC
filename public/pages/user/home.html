@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BE_MUSIC - Music Experience</title>
+    <link href="../../css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="h-screen flex flex-col overflow-hidden font-sans antialiased selection:bg-primary selection:text-white">
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <aside class="w-[240px] bg-sidebar-bg flex flex-col hidden md:flex border-r border-white/5">
+            <div class="h-[70px] flex items-center px-6">
+                <i class="fa-solid fa-record-vinyl text-4xl text-primary animate-spin-slow mr-3"></i>
+                <span class="text-2xl font-bold tracking-wider">MUSIC<span class="text-primary">AI</span></span>
+            </div>
+
+            <nav class="flex-1 px-2 py-4 space-y-1">
+                <a href="#" class="flex items-center px-4 py-3 bg-white/10 text-white rounded-md border-l-4 border-primary group">
+                    <i class="fa-solid fa-house mr-4 text-xl"></i>
+                    <span class="font-medium">Trang Chủ</span>
+                </a>
+                
+                <div class="border-t border-white/10 my-4 mx-2"></div>
+                
+                <p class="px-4 text-xs font-bold text-gray-500 uppercase mb-2">Cá nhân</p>
+                <a href="#" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-md transition">
+                    <i class="fa-regular fa-heart mr-4 text-xl"></i>
+                    <span class="font-medium">Yêu thích</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 flex flex-col bg-main-bg relative overflow-y-auto scroll-smooth">
+            
+            <header class="sticky top-0 z-20 flex items-center justify-between px-8 py-4 bg-main-bg/90 backdrop-blur-md border-b border-white/5">
+                <div class="flex items-center gap-4 w-1/2">
+                    <button class="text-gray-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i></button>
+                    <button class="text-gray-400 hover:text-white"><i class="fa-solid fa-arrow-right"></i></button>
+                    <div class="relative w-full max-w-md group">
+                        <span class="absolute left-3 top-2.5 text-gray-400 group-focus-within:text-primary transition"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" id="searchInput" 
+                            class="w-full bg-white/5 text-white pl-10 pr-4 py-2 rounded-full text-sm focus:outline-none focus:bg-white/10 focus:ring-1 focus:ring-primary/50 transition placeholder-gray-500"
+                            placeholder="Tìm kiếm bài hát, nghệ sĩ, lời bài hát...">
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition"><i class="fa-solid fa-gear text-gray-400"></i></button>
+                    <img src="https://ui-avatars.com/api/?name=User&background=random" class="w-10 h-10 rounded-full border-2 border-transparent hover:border-primary cursor-pointer transition">
+                </div>
+            </header>
+
+            <div class="px-8 pb-32 pt-6">
+                <div class="relative rounded-xl overflow-hidden bg-gradient-to-r from-purple-900 to-blue-900 p-8 mb-8 shadow-2xl">
+                    <div class="relative z-10 max-w-lg">
+                        <h2 class="text-3xl font-bold mb-2 text-white">Cảm xúc của bạn?</h2>
+                        <p class="text-gray-200 mb-6">AI sẽ phân tích và chọn playlist phù hợp nhất với tâm trạng ngay lúc này.</p>
+                        <button class="px-6 py-2 bg-white text-purple-900 font-bold rounded-full hover:scale-105 transition shadow-lg">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Thử ngay
+                        </button>
+                    </div>
+                    <i class="fa-solid fa-music absolute right-10 bottom-[-20px] text-9xl text-white/10 rotate-12"></i>
+                </div>
+
+                <h2 class="text-xl font-bold mb-5 text-white flex items-center gap-2">
+                    Mới Phát Hành <i class="fa-solid fa-chevron-right text-sm bg-white/10 p-1 rounded-full w-6 h-6 flex items-center justify-center hover:bg-white/20 cursor-pointer"></i>
+                </h2>
+                
+                <div id="songList" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                    </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="h-[90px] bg-player-bg border-t border-white/5 px-4 flex items-center justify-between fixed bottom-0 w-full z-50">
+        <div class="flex items-center w-[30%] gap-4">
+            <div class="w-16 h-16 rounded-md overflow-hidden bg-gray-800 shadow-lg group relative cursor-pointer">
+                <img id="currentCover" src="https://via.placeholder.com/64" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center"><i class="fa-solid fa-up-right-and-down-left-from-center text-white"></i></div>
+            </div>
+            <div class="flex flex-col justify-center">
+                <h4 id="currentTitle" class="font-bold text-white text-sm hover:underline cursor-pointer">Chưa chọn bài</h4>
+                <p id="currentArtist" class="text-xs text-gray-400 hover:text-primary cursor-pointer">---</p>
+            </div>
+            <button class="ml-2 text-gray-400 hover:text-primary transition"><i class="fa-regular fa-heart"></i></button>
+        </div>
+
+        <div class="flex flex-col items-center w-[40%]">
+            <div class="flex items-center gap-6 mb-1">
+                <button class="text-gray-400 hover:text-white transition" title="Bật/Tắt Random"><i class="fa-solid fa-shuffle"></i></button>
+                <button class="text-white hover:text-primary transition text-xl"><i class="fa-solid fa-backward-step"></i></button>
+                <button id="mainPlayBtn" class="w-10 h-10 rounded-full border border-white flex items-center justify-center text-white hover:text-primary hover:border-primary hover:bg-white/10 transition scale-110">
+                    <i class="fa-solid fa-play ml-1"></i>
+                </button>
+                <button class="text-white hover:text-primary transition text-xl"><i class="fa-solid fa-forward-step"></i></button>
+                <button class="text-gray-400 hover:text-white transition" title="Lặp lại"><i class="fa-solid fa-repeat"></i></button>
+            </div>
+            <div class="w-full flex items-center gap-2 text-xs text-gray-400 font-medium group">
+                <span id="currentTime">00:00</span>
+                <div class="flex-1 h-1 bg-gray-600 rounded-full relative cursor-pointer hover:h-1.5 transition-all">
+                    <div id="progress" class="absolute top-0 left-0 h-full bg-white group-hover:bg-primary w-0 rounded-full"></div>
+                </div>
+                <span id="duration">00:00</span>
+            </div>
+        </div>
+
+        <div class="flex items-center w-[30%] justify-end gap-4">
+            <button class="text-gray-400 hover:text-white"><i class="fa-solid fa-microphone"></i></button>
+            <div class="flex items-center gap-2 group">
+                <i class="fa-solid fa-volume-high text-gray-400"></i>
+                <div class="w-20 h-1 bg-gray-600 rounded-full relative cursor-pointer hover:h-1.5">
+                    <div class="absolute top-0 left-0 h-full bg-white group-hover:bg-primary w-2/3 rounded-full"></div>
+                </div>
+            </div>
+            <div class="w-px h-8 bg-gray-700 mx-2"></div>
+            <button class="bg-white/10 hover:bg-white/20 text-white text-xs px-2 py-1 rounded">Danh sách phát</button>
+        </div>
+        
+        <audio id="audioPlayer" hidden></audio>
+    </footer>
+
+    <script type="module" src="../../js/user/home.js"></script>
+</body>
+</html>
