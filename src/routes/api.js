@@ -1,6 +1,6 @@
 /**
  * src/routes/api.js
- * FULL VERSION: Auth, Songs, Playlist, History, Likes, Stats, AI Search, Manager Role
+ * FINAL VERSION: Auth (User+History), Songs, Playlist, Likes, Stats, AI Search
  */
 
 const express = require('express');
@@ -9,12 +9,12 @@ const multer = require('multer');
 const path = require('path');
 
 // Import Controllers
-const authCtrl = require('../controllers/authController');
+const authCtrl = require('../controllers/authController'); // Chứa: User, Auth, History
 const songCtrl = require('../controllers/songController');
 const playCtrl = require('../controllers/playlistController');
 const likeCtrl = require('../controllers/likeController');
 const statsCtrl = require('../controllers/statsController');
-const aiCtrl = require('../controllers/aiController'); // <-- IMPORT AI MỚI
+const aiCtrl = require('../controllers/aiController'); // Chứa: AI Search
 
 // Import Middleware
 const { checkUser, checkAdmin, checkManager } = require('../middleware/auth');
@@ -34,10 +34,11 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // ============================================================
-// 1. AUTHENTICATION
+// 1. AUTHENTICATION (Đăng ký, Đăng nhập, Đổi mật khẩu)
 // ============================================================
 router.post('/register', authCtrl.register);
 router.post('/login', authCtrl.login);
+router.post('/change-password', authCtrl.changePassword);
 
 // ============================================================
 // 2. ADMIN USER (Chỉ Admin tối cao)
@@ -81,10 +82,10 @@ router.delete('/user/playlists/delete/:id', checkUser, playCtrl.deletePlaylist);
 router.delete('/user/playlists/remove-song', checkUser, playCtrl.removeSongFromPlaylist);
 
 // ============================================================
-// 5. LỊCH SỬ NGHE NHẠC
+// 5. LỊCH SỬ NGHE NHẠC (Dùng authCtrl)
 // ============================================================
-router.get('/user/history', checkUser, playCtrl.getHistory);
-router.post('/user/history/add', checkUser, playCtrl.addToHistory);
+router.get('/user/history', checkUser, authCtrl.getHistory);
+router.post('/user/history/add', checkUser, authCtrl.addToHistory);
 
 // ============================================================
 // 6. YÊU THÍCH (LIKES)
@@ -102,8 +103,9 @@ router.get('/admin/stats/top-listen', checkManager, statsCtrl.getTopListened);
 router.get('/admin/stats/top-like', checkManager, statsCtrl.getTopLiked);
 
 // ============================================================
-// 8. TÌM KIẾM AI (MỚI THÊM)
+// 8. TÌM KIẾM AI (AI Search)
 // ============================================================
+// Giữ lại tính năng này theo yêu cầu của bạn
 router.post('/ai/search', aiCtrl.searchByEmotion);
 
 module.exports = router;

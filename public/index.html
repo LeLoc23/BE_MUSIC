@@ -111,7 +111,9 @@
             <h3 style="margin-top:0;">👋 Hi, <span id="displayUser"></span></h3>
             <p style="font-size:13px; color:#666;">Role: <span id="displayRole" style="font-weight:bold;"></span></p>
             
-            <div style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
+            <button onclick="openProfileModal()" class="btn-cyan" style="margin-bottom:15px;">👤 Hồ sơ & Đổi Pass</button>
+
+            <div style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
                 <h4>📁 Playlist</h4>
                 <input type="text" id="newPlName" placeholder="Tên Playlist...">
                 <button onclick="createPlaylist()" style="background:#6c757d;">Tạo Mới</button>
@@ -169,10 +171,27 @@
     </div>
 
     <div class="modal-overlay" id="playlistModal"><div class="modal-box"><div class="modal-header">Chọn Playlist</div><ul class="modal-list" id="modalPlaylistList"><li>Đang tải...</li></ul><button class="close-btn" onclick="closeModal('playlistModal')">Đóng</button></div></div>
+    
     <div class="modal-overlay" id="videoModal"><div class="modal-box video-box"><button class="close-video-btn" onclick="closeVideo()">×</button><video id="videoPlayer" class="video-player" controls></video></div></div>
+    
     <div class="modal-overlay" id="lyricsModal"><div class="modal-box"><div class="modal-header">📖 Lời bài hát</div><div id="lyricsContent" class="lyrics-text">...</div><button class="close-btn" onclick="closeModal('lyricsModal')">Đóng</button></div></div>
+    
     <div class="modal-overlay" id="editSongModal">
         <div class="modal-box"><div class="modal-header">✏️ Sửa thông tin</div><input type="hidden" id="editId"><label style="font-size:12px;">Tên bài:</label><input type="text" id="editTitle"><label style="font-size:12px;">Ca sĩ:</label><input type="text" id="editArtist"><div style="display:flex; gap:10px;"><input type="text" id="editGenre" placeholder="Thể loại"><input type="number" id="editYear" placeholder="Năm"></div><label style="font-size:12px;">Lời bài hát:</label><textarea id="editLyrics" rows="4"></textarea><div style="display:flex; gap:10px; margin-top:10px;"><button onclick="submitEditSong()" class="btn-green">Lưu</button><button onclick="closeModal('editSongModal')" class="close-btn" style="margin-top:0;">Hủy</button></div></div>
+    </div>
+
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-box">
+            <div class="modal-header">👤 Hồ sơ cá nhân</div>
+            <p>Tên tài khoản: <b id="proUser"></b></p>
+            <p>Quyền hạn: <b id="proRole"></b></p>
+            <hr style="margin: 15px 0; border:0; border-top:1px solid #eee;">
+            <h4 style="margin-top:0">🔑 Đổi mật khẩu</h4>
+            <input type="password" id="oldPass" placeholder="Mật khẩu cũ">
+            <input type="password" id="newPass" placeholder="Mật khẩu mới">
+            <button onclick="doChangePassword()" class="btn-green">Lưu thay đổi</button>
+            <button onclick="closeModal('profileModal')" class="close-btn">Đóng</button>
+        </div>
     </div>
 
     <script>
@@ -232,6 +251,43 @@
             }
         }
 
+        // --- [MỚI] PROFILE & ĐỔI PASS ---
+        function openProfileModal() {
+            if(!currentUser) return;
+            document.getElementById('proUser').innerText = currentUser.username;
+            document.getElementById('proRole').innerText = currentUser.role.toUpperCase();
+            document.getElementById('oldPass').value = "";
+            document.getElementById('newPass').value = "";
+            document.getElementById('profileModal').style.display = 'flex';
+        }
+
+        async function doChangePassword() {
+            const oldP = document.getElementById('oldPass').value;
+            const newP = document.getElementById('newPass').value;
+            if(!oldP || !newP) return alert("Vui lòng nhập đủ thông tin!");
+
+            try {
+                const res = await fetch(`${API_URL}/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: currentUser.id,
+                        currentPassword: oldP,
+                        newPassword: newP
+                    })
+                });
+                const json = await res.json();
+                
+                if(res.ok) {
+                    alert("✅ " + json.message);
+                    closeModal('profileModal');
+                    doLogout(); // Bắt đăng nhập lại
+                } else {
+                    alert("❌ Lỗi: " + json.error);
+                }
+            } catch(e) { alert("Lỗi kết nối server"); }
+        }
+
         // --- TABS & SEARCH ---
         function switchTab(type) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -255,7 +311,7 @@
             else if(type=='playlists') { document.getElementById('btnPl').classList.add('active'); loadPlaylists(); }
             else if(type=='history') { document.getElementById('btnHistory').classList.add('active'); loadHistory(); }
             else if(type=='users') { document.getElementById('btnUsers').classList.add('active'); loadUsers(); }
-            else if(type=='stats') { // TAB THỐNG KÊ (MỚI)
+            else if(type=='stats') { // TAB THỐNG KÊ
                 document.getElementById('btnStats').classList.add('active');
                 playlistView.style.display = 'none';
                 statsView.style.display = 'block';
@@ -265,7 +321,7 @@
         function searchSong() { loadSongs(document.getElementById('searchInput').value); }
         function handleEnter(e) { if(e.key==='Enter') searchSong(); }
 
-        // --- TÌM KIẾM AI (MỚI) ---
+        // --- TÌM KIẾM AI ---
         async function searchWithAI() {
             const text = document.getElementById('searchInput').value;
             if (!text) return alert("Nhập cảm xúc của bạn (VD: thất tình, nhạc quẩy...)");
