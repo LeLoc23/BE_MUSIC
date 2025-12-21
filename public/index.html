@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music App Pro</title>
+    <title>Music App Pro - AI Hybrid</title>
     <style>
         /* CSS CHÍNH */
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; gap: 20px; height: 100vh; box-sizing: border-box; }
@@ -148,7 +148,7 @@
         </div>
 
         <div id="searchBox" class="search-container">
-            <input type="text" id="searchInput" placeholder="Nhập tên bài hoặc Cảm xúc (VD: buồn, vui)..." onkeypress="handleEnter(event)">
+            <input type="text" id="searchInput" placeholder="Nhập cảm xúc (VD: buồn, vui, thất tình)..." onkeypress="handleEnter(event)">
             <button onclick="searchSong()">🔍 Tìm</button>
             <button onclick="searchWithAI()" class="btn-ai">✨ AI</button>
         </div>
@@ -172,7 +172,12 @@
 
     <div class="modal-overlay" id="playlistModal"><div class="modal-box"><div class="modal-header">Chọn Playlist</div><ul class="modal-list" id="modalPlaylistList"><li>Đang tải...</li></ul><button class="close-btn" onclick="closeModal('playlistModal')">Đóng</button></div></div>
     
-    <div class="modal-overlay" id="videoModal"><div class="modal-box video-box"><button class="close-video-btn" onclick="closeVideo()">×</button><video id="videoPlayer" class="video-player" controls></video></div></div>
+    <div class="modal-overlay" id="videoModal">
+        <div class="modal-box video-box">
+            <button class="close-video-btn" onclick="closeVideo()">×</button>
+            <video id="localVideoPlayer" class="video-player" controls style="display:none; width:100%; height:450px; background:black;"></video>
+        </div>
+    </div>
     
     <div class="modal-overlay" id="lyricsModal"><div class="modal-box"><div class="modal-header">📖 Lời bài hát</div><div id="lyricsContent" class="lyrics-text">...</div><button class="close-btn" onclick="closeModal('lyricsModal')">Đóng</button></div></div>
     
@@ -251,7 +256,7 @@
             }
         }
 
-        // --- [MỚI] PROFILE & ĐỔI PASS ---
+        // --- PROFILE & ĐỔI PASS ---
         function openProfileModal() {
             if(!currentUser) return;
             document.getElementById('proUser').innerText = currentUser.username;
@@ -321,14 +326,19 @@
         function searchSong() { loadSongs(document.getElementById('searchInput').value); }
         function handleEnter(e) { if(e.key==='Enter') searchSong(); }
 
-        // --- TÌM KIẾM AI ---
+        // --- TÌM KIẾM AI (HYBRID: LOCAL + YOUTUBE) ---
         async function searchWithAI() {
             const text = document.getElementById('searchInput').value;
             if (!text) return alert("Nhập cảm xúc của bạn (VD: thất tình, nhạc quẩy...)");
             
             const list = document.getElementById('playlist');
             const aiMsg = document.getElementById('aiMsg');
-            list.innerHTML = "<li>🤖 AI đang suy nghĩ...</li>";
+            
+            // Hiển thị trạng thái Loading
+            list.innerHTML = `<li style="text-align:center; padding: 20px; color:#666;">
+                🤖 AI đang suy nghĩ và tìm kiếm...<br>
+                <small>(Đang quét Database & YouTube)</small>
+            </li>`;
             aiMsg.innerHTML = "";
 
             try {
@@ -339,10 +349,13 @@
                 });
                 const json = await res.json();
                 
-                if(json.ai_analysis) aiMsg.innerHTML = `✨ AI gợi ý từ khóa: <b>${json.ai_analysis.join(", ")}</b>`;
+                if(json.ai_analysis && json.ai_analysis.length > 0) {
+                    aiMsg.innerHTML = `✨ <b>Kết quả:</b> ${json.ai_analysis[0]}`;
+                }
                 
                 list.innerHTML = "";
-                if (json.data.length === 0) return list.innerHTML = `<li style="text-align:center; padding:20px;">AI bó tay 😅.<br>Thử từ khóa khác xem?</li>`;
+                if (!json.data || json.data.length === 0) return list.innerHTML = `<li style="text-align:center; padding:20px;">AI bó tay 😅.<br>Thử từ khóa khác xem?</li>`;
+                
                 json.data.forEach(song => renderSongItem(song, list));
             } catch (e) { list.innerHTML = "<li>Lỗi kết nối AI</li>"; }
         }
@@ -396,17 +409,48 @@
             json.data.forEach(song => renderSongItem(song, list));
         }
 
+        // --- [QUAN TRỌNG] HÀM HIỂN THỊ BÀI HÁT (ĐÃ SỬA) ---
         function renderSongItem(song, listElement) {
-            const li = document.createElement('li'); li.className='song-item';
+            const li = document.createElement('li'); 
+            li.className = 'song-item';
             
-            if (song.is_hidden === 1) {
+            // Xử lý link YouTube để mở tab mới đúng chuẩn
+            let directLink = song.video_url;
+            if (song.is_youtube && song.video_url) {
+                // Tách bỏ tham số ?autoplay=1 trước, rồi thay thế
+                const cleanUrl = song.video_url.split('?')[0]; 
+                directLink = cleanUrl.replace("embed/", "watch?v=");
+            }
+
+            // Xử lý giao diện cho YouTube
+            if (song.is_youtube) {
+                li.style.background = "#fff5f5"; // Đỏ nhạt
+                li.style.borderLeft = "4px solid #ff0000";
+            } else if (song.is_hidden === 1) {
                 li.style.opacity = "0.6";
                 li.style.background = "#fff3cd";
             }
-            li.onclick = (e) => { if(e.target.tagName!=='BUTTON') playSong(song); };
+
+            // Xử lý Click
+            li.onclick = (e) => { 
+                if(e.target.tagName !== 'BUTTON') {
+                    if (song.is_youtube) {
+                        // NẾU LÀ YOUTUBE -> MỞ TAB MỚI
+                        window.open(directLink, '_blank'); 
+                    } else {
+                        playSong(song); // Local -> Phát nhạc
+                    }
+                }
+            };
             
             let buttons = "";
-            if(currentUser) {
+            
+            // Nếu là Youtube, chỉ hiện nút Xem Video
+            if (song.is_youtube) {
+                buttons = `<button class="action-btn btn-red" onclick="window.open('${directLink}', '_blank')">▶️ YouTube</button>`;
+            } 
+            // Nếu là Nhạc Local, hiện đầy đủ nút
+            else if(currentUser) {
                 const isLiked = likedSongIds.includes(song.id);
                 const heartClass = isLiked ? 'btn-heart liked' : 'btn-heart';
                 buttons += `<button class="action-btn ${heartClass}" onclick="toggleLike(event, ${song.id})">${isLiked?'❤️':'🤍'}</button>`;
@@ -414,7 +458,7 @@
                 if(song.video_url) buttons += `<button class="action-btn btn-purple" onclick="openVideo(event, '${song.video_url}')">🎥</button>`;
                 buttons += `<button class="action-btn btn-green" onclick="openPlaylistModal(${song.id})">➕</button>`;
                 
-                // Manager/Admin: Sửa, Ẩn
+                // Admin Actions
                 if(currentUser.role === 'admin' || currentUser.role === 'manager') {
                     const hideText = song.is_hidden === 1 ? "👁️" : "🙈";
                     const hideColor = song.is_hidden === 1 ? "btn-cyan" : "btn-orange";
@@ -423,14 +467,16 @@
                     const songData = JSON.stringify(song).replace(/"/g, '&quot;');
                     buttons += `<button class="action-btn btn-orange" onclick="openEditSong(event, ${songData})">✏️</button>`;
                 }
-                // Chỉ Admin mới có nút Xóa
                 if(currentUser.role === 'admin') {
                     buttons += `<button class="action-btn btn-red" onclick="deleteSongAdmin(event, ${song.id})">🗑</button>`;
                 }
             }
 
-            let info = `<strong>${song.title}</strong> ${song.is_hidden===1 ? '<span style="color:#dc3545; font-size:12px;">(Đang ẩn)</span>' : ''}<br><small>${song.artist}`;
-            if(song.genre) info += ` • ${song.genre}`;
+            // Nhãn YouTube
+            const sourceLabel = song.is_youtube ? "<span style='color:red; font-weight:bold; font-size:10px; border:1px solid red; padding:0 3px; border-radius:3px; margin-right:5px;'>YOUTUBE</span>" : "";
+
+            let info = `<div>${sourceLabel}<strong>${song.title}</strong></div><small>${song.artist}`;
+            if(song.genre && !song.is_youtube) info += ` • ${song.genre}`;
             if(song.year) info += ` • ${song.year}`;
             info += `</small>`;
             
@@ -455,9 +501,24 @@
             document.getElementById('lyricsModal').style.display = 'flex';
         }
 
-        // --- VIDEO ---
-        function openVideo(e, url) { e.stopPropagation(); document.getElementById('audioPlayer').pause(); document.getElementById('videoModal').style.display='flex'; document.getElementById('videoPlayer').src = url; document.getElementById('videoPlayer').play(); }
-        function closeVideo() { document.getElementById('videoModal').style.display='none'; document.getElementById('videoPlayer').pause(); }
+        // --- VIDEO (Chỉ cho Local MP4) ---
+        function openVideo(e, url) { 
+            e.stopPropagation(); 
+            // Dừng nhạc nền
+            document.getElementById('audioPlayer').pause(); 
+            document.getElementById('videoModal').style.display = 'flex';
+
+            // Chỉ dùng cho local video
+            const localVid = document.getElementById('localVideoPlayer');
+            localVid.style.display = 'block';
+            localVid.src = url;
+            localVid.play();
+        }
+
+        function closeVideo() { 
+            document.getElementById('videoModal').style.display = 'none';
+            document.getElementById('localVideoPlayer').pause();
+        }
 
         // --- ADMIN ACTIONS ---
         function openEditSong(e, song) {
