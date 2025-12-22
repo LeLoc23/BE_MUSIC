@@ -12,7 +12,7 @@ const OpenAI = require('openai');
 
 // CẤU HÌNH OPENAI (DÁN KEY CỦA BẠN VÀO ĐÂY)
 const openai = new OpenAI({
-    apiKey: "" 
+    apiKey: process.env.OPENAI_API_KEY 
 });
 
 exports.searchByEmotion = async (req, res) => {
