@@ -1,6 +1,7 @@
 /**
  * src/controllers/songController.js
  * Xử lý logic bài hát: Tìm kiếm, Phát nhạc/Video, Upload Thêm/Sửa/Xóa/Ẩn nhạc
+ * CẬP NHẬT:Hỗ trợ update file media
  */
 
 const db = require('../config/database');
@@ -15,58 +16,92 @@ function removeVietnameseTones(str) {
     return str;
 }
 
-// 1. Lấy danh sách bài hát
+// 1. Lấy danh sách bài hát (CÓ PHÂN TRANG)
 exports.getAllSongs = (req, res) => {
     const protocol = req.protocol;
     const host = req.get('host');
-    const searchQuery = req.query.q;
-    
-    // Lấy Role từ Header
     const userRole = req.headers['x-user-role'];
 
-    db.all("SELECT * FROM songs", [], (err, rows) => {
+    // --- A. LẤY THAM SỐ PHÂN TRANG ---
+    // [FIX] Sửa lỗi mặc định trang 2 thành trang 1
+    const page = parseInt(req.query.page) || 1;      
+    const limit = parseInt(req.query.limit) || 12;   
+    const offset = (page - 1) * limit;               
+
+    // --- B. XÂY DỰNG ĐIỀU KIỆN LỌC (WHERE) ---
+    let conditions = [];
+    let params = [];
+
+    // 1. Lọc theo Role: Nếu không phải Admin/Manager -> Chỉ lấy bài không ẩn
+    if (userRole !== 'admin' && userRole !== 'manager') {
+        conditions.push("is_hidden = 0");
+    }
+
+    // 2. Lọc theo Tìm kiếm (Nếu có ?q=...)
+    if (req.query.q) {
+        conditions.push("(title LIKE ? OR artist LIKE ?)");
+        const keyword = `%${req.query.q}%`;
+        params.push(keyword, keyword);
+    }
+
+    // Ghép các điều kiện thành chuỗi SQL WHERE
+    const whereSql = conditions.length > 0 ? "WHERE " + conditions.join(" AND ") : "";
+
+    // --- C. THỰC HIỆN QUERY ---
+    
+    // Bước 1: Đếm tổng số bài hát
+    const countSql = `SELECT COUNT(*) as total FROM songs ${whereSql}`;
+
+    db.get(countSql, params, (err, row) => {
         if (err) {
-            if(err.message.includes('no such table')) return res.json({data:[]});
+            if(err.message.includes('no such table')) return res.json({data:[], pagination:{}});
             return res.status(500).json({ error: err.message });
         }
 
-        let songs = rows;
+        const totalItems = row ? row.total : 0;
+        const totalPages = Math.ceil(totalItems / limit);
 
-       
-        if (userRole !== 'admin' && userRole !== 'manager') {
-            songs = songs.filter(s => s.is_hidden !== 1);
-        }
+        // Bước 2: Lấy dữ liệu chi tiết
+        // Sắp xếp theo ID giảm dần (bài mới lên đầu)
+        const dataSql = `SELECT * FROM songs ${whereSql} ORDER BY id DESC LIMIT ? OFFSET ?`;
+        
+        // Gộp tham số tìm kiếm + tham số phân trang
+        const dataParams = [...params, limit, offset];
 
-        // --- TÌM KIẾM ---
-        if (searchQuery) {
-            const keyword = removeVietnameseTones(searchQuery).toLowerCase().trim();
-            songs = songs.filter(song => {
-                const titleNorm = removeVietnameseTones(song.title).toLowerCase();
-                const artistNorm = removeVietnameseTones(song.artist).toLowerCase();
-                return titleNorm.includes(keyword) || artistNorm.includes(keyword);
+        db.all(dataSql, dataParams, (err2, rows) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+
+            // Bước 3: Xử lý đường dẫn ảnh & video
+            const result = rows.map(song => {
+                let finalImage;
+                if (!song.image_path || song.image_path.trim() === "") {
+                    // Dùng link online cho ổn định
+                    finalImage = "https://placehold.co/150x150?text=Music"; 
+                } else if (song.image_path.startsWith('http')) {
+                    finalImage = song.image_path; 
+                } else {
+                    finalImage = `${protocol}://${host}/public/images/${song.image_path}`; 
+                }
+
+                return {
+                    ...song,
+                    image_url: finalImage,
+                    stream_url: `${protocol}://${host}/api/stream/${song.id}`,
+                    video_url: song.video_path ? `${protocol}://${host}/api/stream-video/${song.id}` : null
+                };
             });
-        }
 
-        // --- XỬ LÝ ẢNH & URL ---
-        const result = songs.map(song => {
-            let finalImage;
-            if (!song.image_path || song.image_path.trim() === "") {
-                finalImage = "https://via.placeholder.com/150?text=Music"; 
-            } else if (song.image_path.startsWith('http')) {
-                finalImage = song.image_path; 
-            } else {
-                finalImage = `${protocol}://${host}/public/images/${song.image_path}`; 
-            }
-
-            return {
-                ...song,
-                image_url: finalImage,
-                stream_url: `${protocol}://${host}/api/stream/${song.id}`,
-                video_url: song.video_path ? `${protocol}://${host}/api/stream-video/${song.id}` : null
-            };
+            // Bước 4: Trả về kết quả kèm thông tin Pagination
+            res.json({ 
+                data: result,
+                pagination: {
+                    page: page,
+                    limit: limit,
+                    totalItems: totalItems,
+                    totalPages: totalPages
+                }
+            });
         });
-
-        res.json({ data: result });
     });
 };
 
@@ -129,20 +164,43 @@ exports.addSongAdmin = (req, res) => {
         const imageFilename = req.files['imageFile'] ? req.files['imageFile'][0].filename : "";
         const videoFilename = req.files['videoFile'] ? req.files['videoFile'][0].filename : null;
         
-        db.run("INSERT INTO songs (title, artist, file_path, image_path, video_path, genre, year, lyrics, is_hidden) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)", 
-            [title, artist, musicFilename, imageFilename, videoFilename, genre, year, lyrics], function(err) {
+        const created_at = new Date().toISOString();
+
+        db.run("INSERT INTO songs (title, artist, file_path, image_path, video_path, genre, year, lyrics, is_hidden, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)", 
+            [title, artist, musicFilename, imageFilename, videoFilename, genre, year, lyrics, created_at], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: "Thêm thành công!", id: this.lastID });
         });
     } catch (error) { res.status(500).json({ error: "Lỗi upload" }); }
 };
 
-// 5. Admin Update
+// 5. Admin Update (CẬP NHẬT: Hỗ trợ đổi file Media)
 exports.updateSongAdmin = (req, res) => {
     const songId = req.params.id;
     const { title, artist, genre, year, lyrics } = req.body;
-    const sql = "UPDATE songs SET title = ?, artist = ?, genre = ?, year = ?, lyrics = ? WHERE id = ?";
-    db.run(sql, [title, artist, genre, year, lyrics, songId], function(err) {
+
+    // 1. Các trường thông tin cơ bản
+    let sql = "UPDATE songs SET title = ?, artist = ?, genre = ?, year = ?, lyrics = ?";
+    let params = [title, artist, genre, year, lyrics];
+
+    // 2. Kiểm tra nếu có file Ảnh mới
+    if (req.files && req.files['imageFile']) {
+        sql += ", image_path = ?";
+        params.push(req.files['imageFile'][0].filename);
+    }
+
+    // 3. Kiểm tra nếu có file Video mới
+    if (req.files && req.files['videoFile']) {
+        sql += ", video_path = ?";
+        params.push(req.files['videoFile'][0].filename);
+    }
+
+    // 4. Thêm điều kiện WHERE
+    sql += " WHERE id = ?";
+    params.push(songId);
+
+    // 5. Thực thi Update
+    db.run(sql, params, function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: "Cập nhật thành công!" });
     });

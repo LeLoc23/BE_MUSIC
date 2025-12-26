@@ -1,6 +1,8 @@
 /**
  * MAIN SERVER ENTRY POINT
  */
+require('dotenv').config();
+
 console.log("1. Bắt đầu chạy Server..."); // Thêm dòng này ở dòng 1
 const express = require('express');
 const cors = require('cors');

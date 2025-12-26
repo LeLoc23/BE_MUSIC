@@ -1,6 +1,6 @@
 /**
  * src/controllers/aiController.js
- * PHIÊN BẢN: ULTIMATE HYBRID COMBINED
+
  * 1. ChatGPT lọc từ khóa.
  * 2. Tìm song song: Python (Local) + YouTube API.
  * 3. Gộp kết quả trả về cả hai.
@@ -10,9 +10,10 @@ const { spawn } = require('child_process');
 const youtubesearchapi = require("youtube-search-api");
 const OpenAI = require('openai');
 
-// CẤU HÌNH OPENAI (DÁN KEY CỦA BẠN VÀO ĐÂY)
+// CẤU HÌNH OPENAI
 const openai = new OpenAI({
-    apiKey: "" 
+    apiKey: process.env.OPENAI_API_KEY
+
 });
 
 exports.searchByEmotion = async (req, res) => {
@@ -40,7 +41,7 @@ exports.searchByEmotion = async (req, res) => {
             });
 
             refinedKeyword = completion.choices[0].message.content.replace(/[.,]/g, '');
-            aiMessage = `ChatGPT hiểu bạn: "${refinedKeyword}"`;
+            aiMessage = `ChatGPT hiểu bạn đang: "${refinedKeyword}"`;
             console.log(`🤖 OpenAI: "${userText}" -> "${refinedKeyword}"`);
 
         } catch (openaiError) {

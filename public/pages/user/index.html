@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BE_MUSIC - Final Fixed</title>
+    <title>BE_MUSIC - Final Fixed Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -85,7 +85,7 @@
                             <input type="password" id="regPass" placeholder="New Pass" class="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-xs mb-2 text-white" onkeydown="if(event.key === 'Enter') doRegister()">
                             <button onclick="doRegister()" class="w-full bg-green-600 hover:bg-green-700 text-white text-xs py-1 rounded">Đăng ký</button>
                         </div>
-                        <p id="authMsg" class="text-red-500 text-[10px] mt-1 text-center"></p>
+                        <p id="authMsg" class="text-red-500 text-[10px] mt-2 text-center h-4"></p>
                     </div>
                 </div>
             </nav>
@@ -96,19 +96,21 @@
                 <div class="flex items-center gap-4 w-1/2">
                     <div class="relative w-full max-w-lg group">
                         <span class="absolute left-4 top-3 text-gray-400 group-focus-within:text-primary transition"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" id="searchInput" onkeypress="handleEnter(event)" class="w-full bg-sidebar-bg text-white pl-12 pr-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition border border-white/5" placeholder="Tìm kiếm...">
+                        <input type="text" id="searchInput" onkeypress="handleEnter(event)" class="w-full bg-sidebar-bg text-white pl-12 pr-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition border border-white/5" placeholder="Nhập tên bài hát hoặc cảm xúc (VD: buồn, thất tình...)">
                         <button onclick="performSearch()" class="absolute right-2 top-1 bg-primary hover:bg-purple-600 text-white px-4 py-1.5 rounded-full text-xs font-bold transition">Tìm</button>
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
                     <button id="uploadBtn" onclick="toggleAdminModal()" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition hidden text-orange-500" title="Upload Nhạc"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                    <div id="userDisplay" class="hidden flex items-center gap-3">
-                        <div class="text-right hidden md:block">
-                            <div id="userNameDisplay" class="text-sm font-bold text-white">User</div>
-                            <div id="userRoleDisplay" class="text-[10px] text-gray-400 uppercase tracking-wider">Member</div>
+                    
+                    <div id="userDisplay" class="hidden relative">
+                        <div id="userTrigger" onclick="openProfileModal()" class="flex items-center gap-3 cursor-pointer p-1 rounded-full hover:bg-white/10 transition select-none">
+                            <div class="text-right hidden md:block">
+                                <div id="userNameDisplay" class="text-sm font-bold text-white">User</div>
+                                <div id="userRoleDisplay" class="text-[10px] text-gray-400 uppercase tracking-wider">Member</div>
+                            </div>
+                            <img src="https://ui-avatars.com/api/?name=User&background=random" class="w-10 h-10 rounded-full border-2 border-primary">
                         </div>
-                        <img src="https://ui-avatars.com/api/?name=User&background=random" class="w-10 h-10 rounded-full border-2 border-primary">
-                        <button onclick="doLogout()" class="text-xs text-red-400 hover:text-red-500 ml-2"><i class="fa-solid fa-power-off"></i></button>
                     </div>
                 </div>
             </header>
@@ -119,16 +121,7 @@
                         <span id="pageName">Kho Nhạc</span> 
                         <button id="createPlBtn" onclick="createPlaylist()" class="hidden text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded ml-3 border border-white/10"><i class="fa-solid fa-plus mr-1"></i> Tạo Playlist</button>
                     </h2>
-                    
-                    <div class="flex gap-2">
-                        <button class="tab-btn active bg-white/5 text-white border-l-4 border-primary px-3 py-1 rounded" id="btnAll" onclick="switchTab('all')">Kho Nhạc</button>
-                        <button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded hidden" id="btnLikes" onclick="switchTab('likes')">Yêu Thích</button>
-                        <button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded hidden" id="btnPl" onclick="switchTab('playlists')">Playlist</button>
-                        <button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded hidden" id="btnHistory" onclick="switchTab('history')">Lịch Sử</button>
-                        
-                        <button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded hidden" id="btnUsers" onclick="switchTab('users')">Users</button>
-                        <button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded hidden" id="btnStats" onclick="switchTab('stats')">Thống Kê</button>
-                    </div>
+                    <div class="flex gap-2" id="topNav"></div>
                 </div>
                 
                 <div id="mainContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
@@ -138,17 +131,17 @@
                 <div id="searchSplitView" class="hidden flex flex-col lg:flex-row gap-6 h-[500px]">
                     <div class="flex-1 bg-sidebar-bg rounded-xl border border-white/5 flex flex-col overflow-hidden">
                         <div class="p-4 border-b border-white/5 bg-white/5 font-bold text-white flex justify-between">
-                            <span><i class="fa-solid fa-database mr-2 text-blue-500"></i> Kết quả tìm trong Database</span>
-                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">Local</span>
+                            <span><i class="fa-solid fa-database mr-2 text-blue-500"></i> Tìm trong Database</span>
+                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">Local SQL</span>
                         </div>
                         <div id="sqlResults" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
                     </div>
                     <div class="flex-1 bg-sidebar-bg rounded-xl border border-primary/30 flex flex-col overflow-hidden relative">
                         <div class="p-4 border-b border-primary/20 bg-primary/10 font-bold text-white flex justify-between">
-                            <span><i class="fa-solid fa-wand-magic-sparkles mr-2 text-primary"></i> Gợi ý AI</span>
-                            <span class="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">Internet</span>
+                            <span><i class="fa-solid fa-wand-magic-sparkles mr-2 text-primary"></i> Gợi ý AI (Hybrid)</span>
+                            <span class="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">AI + Internet</span>
                         </div>
-                        <div id="aiAnalysisMsg" class="px-4 py-2 text-xs text-primary italic border-b border-white/5 bg-black/20"></div>
+                        <div id="aiAnalysisMsg" class="px-4 py-2 text-xs text-primary italic border-b border-white/5 bg-black/20 min-h-[40px] flex items-center"></div>
                         <div id="aiResults" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
                     </div>
                 </div>
@@ -181,10 +174,45 @@
             </div>
         </div>
         <div class="flex items-center w-[30%] justify-end gap-4">
-            <button onclick="document.getElementById('lyricsModal').classList.remove('hidden')" class="text-gray-400 hover:text-white" title="Xem lời bài hát"><i class="fa-solid fa-microphone"></i></button>
+            <button onclick="document.getElementById('lyricsModal').classList.remove('hidden')" class="text-gray-400 hover:text-white" title="Xem lời"><i class="fa-solid fa-microphone"></i></button>
         </div>
         <audio id="audioPlayer" hidden></audio>
     </footer>
+
+    <div id="profileModal" class="fixed inset-0 bg-black/80 hidden z-[90] flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-sidebar-bg w-[400px] rounded-xl border border-white/10 p-6 shadow-2xl modal-enter relative">
+            <button onclick="closeModal('profileModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <div class="text-center mb-4">
+                <h3 class="text-xl font-bold text-white mb-4">👤 Hồ sơ cá nhân</h3>
+                <div class="bg-white/5 rounded-lg p-3 text-left">
+                    <p class="text-gray-300 mb-2 flex justify-between">
+                        <span>Tài khoản:</span> <b id="proUser" class="text-white"></b>
+                    </p>
+                    <p class="text-gray-300 flex justify-between">
+                        <span>Quyền hạn:</span> <b id="proRole" class="text-primary uppercase"></b>
+                    </p>
+                </div>
+            </div>
+
+            <hr class="border-white/10 my-4">
+
+            <h4 class="text-white font-bold mb-3 text-sm"><i class="fa-solid fa-key text-primary mr-1"></i> Đổi mật khẩu</h4>
+            <div class="space-y-3">
+                <input type="password" id="oldPass" placeholder="Mật khẩu cũ" class="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-white text-sm focus:border-primary focus:outline-none placeholder-gray-500">
+                <input type="password" id="newPass" placeholder="Mật khẩu mới" class="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-white text-sm focus:border-primary focus:outline-none placeholder-gray-500">
+                <button onclick="doChangePassword()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded font-bold transition text-sm">Lưu thay đổi</button>
+            </div>
+
+            <hr class="border-white/10 my-4">
+
+            <button onclick="doLogout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white py-2 rounded font-bold transition text-sm border border-red-500/30">
+                <i class="fa-solid fa-right-from-bracket mr-2"></i> Đăng xuất
+            </button>
+        </div>
+    </div>
 
     <div id="adminModal" class="fixed inset-0 bg-black/80 hidden z-[60] flex items-center justify-center backdrop-blur-sm">
         <div class="bg-sidebar-bg w-[500px] rounded-xl border border-white/10 p-6 shadow-2xl modal-enter">
@@ -258,7 +286,6 @@
         let currentUser = null;
         let likedSongIds = [];
         let selectedSongId = null;
-        let allSongsCache = [];
         const audio = document.getElementById('audioPlayer');
         const progressBar = document.getElementById('progressBar');
 
@@ -266,68 +293,174 @@
         function showAuth(type) {
             document.getElementById('loginForm').classList.toggle('hidden', type !== 'login');
             document.getElementById('regForm').classList.toggle('hidden', type !== 'register');
+            document.getElementById('authMsg').innerText = ""; // Clear msg khi chuyển tab
         }
+
+        // --- HÀM ĐĂNG NHẬP MỚI ---
         async function doLogin() {
-            const u = document.getElementById('loginUser').value, p = document.getElementById('loginPass').value;
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+            const msgEl = document.getElementById('authMsg');
+
+            if(!u || !p) {
+                 msgEl.innerText = "❌ Vui lòng nhập Username & Password!";
+                 return;
+            }
+
+            msgEl.innerText = "⏳ Đang đăng nhập...";
+            msgEl.className = "text-yellow-500 text-[10px] mt-2 text-center";
+
             try {
                 const res = await fetch(`${API_URL}/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p}) });
                 const json = await res.json();
-                if(res.ok) { currentUser = json.user; updateUI(true); switchTab('all'); fetchAllSongsForAI(); } 
-                else document.getElementById('authMsg').innerText = json.error;
-            } catch(e) { document.getElementById('authMsg').innerText = "Lỗi kết nối server!"; }
-        }
-        function doLogout() { currentUser=null; updateUI(false); location.reload(); }
-        function updateUI(isLogin) {
-            document.getElementById('authSection').classList.toggle('hidden', isLogin);
-            document.getElementById('userDisplay').classList.toggle('hidden', !isLogin);
-            
-            // Toggle Sidebar Menu
-            document.getElementById('libraryMenu').classList.toggle('hidden', !isLogin);
-            
-            // Toggle Top Nav Buttons
-            const tabs = ['btnLikes', 'btnPl', 'btnHistory'];
-            tabs.forEach(id => document.getElementById(id).classList.toggle('hidden', !isLogin));
-
-            if(isLogin) {
-                document.getElementById('userNameDisplay').innerText = currentUser.username;
-                document.getElementById('userRoleDisplay').innerText = currentUser.role;
-                const isAdmin = currentUser.role === 'admin';
-                const isManager = currentUser.role === 'manager';
                 
-                document.getElementById('managerMenu').classList.toggle('hidden', !(isAdmin || isManager));
-                document.getElementById('uploadBtn').classList.toggle('hidden', !(isAdmin || isManager));
-                document.getElementById('adminMenu').classList.toggle('hidden', !isAdmin);
-                
-                document.getElementById('btnUsers').classList.toggle('hidden', !isAdmin);
-                document.getElementById('btnStats').classList.toggle('hidden', !(isAdmin || isManager));
+                if(res.ok) { 
+                    currentUser = json.user; 
+                    updateUI(true); 
+                    switchTab('all'); 
+                    msgEl.innerText = "";
+                } else {
+                    msgEl.innerText = "❌ " + (json.error || "Sai thông tin!");
+                    msgEl.className = "text-red-500 text-[10px] mt-2 text-center";
+                }
+            } catch(e) { 
+                msgEl.innerText = "❌ Lỗi kết nối server!";
+                msgEl.className = "text-red-500 text-[10px] mt-2 text-center";
             }
         }
 
-        async function fetchAllSongsForAI() {
-            try { const res = await fetch(`${API_URL}/songs`); const json = await res.json(); allSongsCache = json.data; } catch(e) {}
+        // --- HÀM ĐĂNG KÝ MỚI (ĐÃ SỬA) ---
+        async function doRegister() {
+            const u = document.getElementById('regUser').value.trim();
+            const p = document.getElementById('regPass').value.trim();
+            const msgEl = document.getElementById('authMsg');
+
+            if(!u || !p) {
+                msgEl.innerText = "❌ Vui lòng nhập đủ thông tin!";
+                msgEl.className = "text-red-500 text-[10px] mt-2 text-center";
+                return;
+            }
+
+            msgEl.innerText = "⏳ Đang xử lý...";
+            msgEl.className = "text-yellow-500 text-[10px] mt-2 text-center";
+
+            try {
+                const res = await fetch(`${API_URL}/register`, { 
+                    method:'POST', 
+                    headers:{'Content-Type':'application/json'}, 
+                    body:JSON.stringify({username:u, password:p}) 
+                });
+                const json = await res.json();
+                
+                if(res.ok) { 
+                    alert("✅ Đăng ký thành công! Hãy đăng nhập.");
+                    showAuth('login');
+                    document.getElementById('regUser').value = "";
+                    document.getElementById('regPass').value = "";
+                    msgEl.innerText = "";
+                } else {
+                    msgEl.innerText = "❌ " + (json.error || "Đăng ký thất bại");
+                    msgEl.className = "text-red-500 text-[10px] mt-2 text-center";
+                }
+            } catch(e){ 
+                msgEl.innerText = "❌ Lỗi kết nối server!";
+                msgEl.className = "text-red-500 text-[10px] mt-2 text-center";
+            }
+        }
+
+        function doLogout() { currentUser=null; updateUI(false); location.reload(); }
+        
+        function updateUI(isLogin) {
+            document.getElementById('authSection').classList.toggle('hidden', isLogin);
+            document.getElementById('userDisplay').classList.toggle('hidden', !isLogin);
+            document.getElementById('libraryMenu').classList.toggle('hidden', !isLogin);
+            
+            const topNav = document.getElementById('topNav');
+            if(isLogin) {
+                const isAdmin = currentUser.role === 'admin';
+                const isManager = currentUser.role === 'manager';
+                let html = `<button class="tab-btn active bg-white/5 text-white border-l-4 border-primary px-3 py-1 rounded transition" id="btnAll" onclick="switchTab('all')">Kho Nhạc</button>`;
+                html += `<button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded transition" id="btnLikes" onclick="switchTab('likes')">Yêu Thích</button>`;
+                html += `<button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded transition" id="btnPl" onclick="switchTab('playlists')">Playlist</button>`;
+                html += `<button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded transition" id="btnHistory" onclick="switchTab('history')">Lịch Sử</button>`;
+                
+                if (isAdmin) html += `<button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded transition" id="btnUsers" onclick="switchTab('users')">Users</button>`;
+                if (isAdmin || isManager) html += `<button class="tab-btn text-gray-400 hover:text-white px-3 py-1 rounded transition" id="btnStats" onclick="switchTab('stats')">Thống Kê</button>`;
+                topNav.innerHTML = html;
+                document.getElementById('userNameDisplay').innerText = currentUser.username;
+                document.getElementById('userRoleDisplay').innerText = currentUser.role;
+                document.getElementById('managerMenu').classList.toggle('hidden', !(isAdmin || isManager));
+                document.getElementById('uploadBtn').classList.toggle('hidden', !(isAdmin || isManager));
+                document.getElementById('adminMenu').classList.toggle('hidden', !isAdmin);
+            } else {
+                topNav.innerHTML = `<button class="tab-btn active bg-white/5 text-white border-l-4 border-primary px-3 py-1 rounded" id="btnAll" onclick="switchTab('all')">Kho Nhạc</button>`;
+                document.getElementById('managerMenu').classList.add('hidden');
+                document.getElementById('adminMenu').classList.add('hidden');
+                document.getElementById('uploadBtn').classList.add('hidden');
+            }
+        }
+        
+        // --- CLICK USER AVATAR TO OPEN PROFILE ---
+        function openProfileModal() {
+            if(!currentUser) return alert("Vui lòng đăng nhập!");
+            document.getElementById('proUser').innerText = currentUser.username;
+            document.getElementById('proRole').innerText = currentUser.role;
+            
+            // Reset input
+            document.getElementById('oldPass').value = '';
+            document.getElementById('newPass').value = '';
+
+            document.getElementById('profileModal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // --- PASSWORD CHANGE (UPDATED LOGIC) ---
+        async function doChangePassword() {
+            const oldP = document.getElementById('oldPass').value;
+            const newP = document.getElementById('newPass').value;
+            
+            if(!oldP || !newP) return alert("Vui lòng nhập đủ thông tin!");
+
+            try {
+                // Sửa Route thành /change-password và gửi ID trong Body
+                const res = await fetch(`${API_URL}/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: currentUser.id,
+                        currentPassword: oldP,
+                        newPassword: newP
+                    })
+                });
+                
+                const json = await res.json();
+                
+                if(res.ok) {
+                    alert("✅ " + (json.message || "Đổi mật khẩu thành công!"));
+                    closeModal('profileModal');
+                    doLogout(); // Đăng xuất để đăng nhập lại
+                } else {
+                    alert("❌ Lỗi: " + (json.error || "Không thể đổi mật khẩu"));
+                }
+            } catch(e) { 
+                console.error(e);
+                alert("❌ Lỗi kết nối server (Kiểm tra lại API Route)"); 
+            }
         }
 
         // --- NAVIGATION ---
         function switchTab(type) {
             if(type === 'users' && (!currentUser || currentUser.role !== 'admin')) return alert("Cấm truy cập!");
             if(type === 'stats' && (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'manager'))) return alert("Cấm truy cập!");
-
-            // Update Tab Style (Top Nav)
-            document.querySelectorAll('.tab-btn').forEach(el => { 
-                el.classList.remove('bg-white/5', 'text-white', 'border-l-4', 'border-primary'); 
-                el.classList.add('text-gray-400'); 
-            });
+            document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('bg-white/5', 'text-white', 'border-l-4', 'border-primary'); el.classList.add('text-gray-400'); });
             const activeBtn = document.getElementById(`btn${type.charAt(0).toUpperCase() + type.slice(1)}`);
-            if(activeBtn) {
-                activeBtn.classList.add('bg-white/5', 'text-white', 'border-l-4', 'border-primary');
-                activeBtn.classList.remove('text-gray-400');
-            }
-
-            // Update Sidebar Link
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('bg-white/5', 'text-white', 'border-l-4', 'border-primary'));
+            if(activeBtn) { activeBtn.classList.add('bg-white/5', 'text-white', 'border-l-4', 'border-primary'); activeBtn.classList.remove('text-gray-400'); }
+            document.querySelectorAll('.nav-item').forEach(el => { el.classList.remove('bg-white/5', 'text-white', 'border-l-4', 'border-primary'); el.classList.add('text-gray-400'); });
             const sideTab = document.getElementById(`tab-${type}`);
-            if(sideTab) sideTab.classList.add('bg-white/5', 'text-white', 'border-l-4', 'border-primary');
-
+            if(sideTab) { sideTab.classList.add('bg-white/5', 'text-white', 'border-l-4', 'border-primary'); sideTab.classList.remove('text-gray-400'); }
             
             document.getElementById('mainContainer').classList.remove('hidden');
             document.getElementById('searchSplitView').classList.add('hidden');
@@ -335,37 +468,12 @@
             const container = document.getElementById('mainContainer');
             container.innerHTML = '<div class="col-span-full text-center py-20 text-gray-500"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
             
-            if(type === 'all') { 
-                document.getElementById('pageName').innerText = "Kho Nhạc"; 
-                container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6";
-                loadSongs(); 
-            }
-            else if(type === 'likes') { 
-                document.getElementById('pageName').innerText = "Yêu Thích"; 
-                container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6";
-                loadLikedSongs(); 
-            }
-            else if(type === 'playlists') { 
-                document.getElementById('pageName').innerText = "Playlist"; 
-                document.getElementById('createPlBtn').classList.remove('hidden'); 
-                container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"; 
-                loadPlaylists(); 
-            }
-            else if(type === 'history') { 
-                document.getElementById('pageName').innerText = "Lịch Sử"; 
-                container.className = "flex flex-col gap-2";
-                loadHistory(); 
-            }
-            else if(type === 'users') { 
-                document.getElementById('pageName').innerText = "Quản Lý Users"; 
-                container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"; 
-                loadUsers(); 
-            }
-            else if(type === 'stats') { 
-                document.getElementById('pageName').innerText = "Thống Kê"; 
-                container.className = "block"; 
-                loadStats(); 
-            }
+            if(type === 'all') { document.getElementById('pageName').innerText = "Kho Nhạc"; container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"; loadSongs(); }
+            else if(type === 'likes') { document.getElementById('pageName').innerText = "Yêu Thích"; container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"; loadLikedSongs(); }
+            else if(type === 'playlists') { document.getElementById('pageName').innerText = "Playlist"; document.getElementById('createPlBtn').classList.remove('hidden'); container.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"; loadPlaylists(); }
+            else if(type === 'history') { document.getElementById('pageName').innerText = "Lịch Sử"; container.className = "flex flex-col gap-2"; loadHistory(); }
+            else if(type === 'users') { document.getElementById('pageName').innerText = "Quản Lý Users"; container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"; loadUsers(); }
+            else if(type === 'stats') { document.getElementById('pageName').innerText = "Thống Kê"; container.className = "block"; loadStats(); }
         }
 
         // --- FETCHING ---
@@ -373,64 +481,29 @@
         async function loadSongs() { await fetchLikedIds(); const res = await fetch(`${API_URL}/songs`); const json = await res.json(); renderGrid(json.data, 'song'); }
         async function loadLikedSongs() { await fetchLikedIds(); const res = await fetch(`${API_URL}/user/likes`, { headers: { 'X-User-ID': currentUser.id } }); const json = await res.json(); renderGrid(json.data, 'song'); }
         async function loadPlaylists() { const res = await fetch(`${API_URL}/user/playlists`, {headers:{'X-User-ID':currentUser.id}}); const json = await res.json(); renderGrid(json.data, 'playlist'); }
-        async function loadHistory() { 
-            const res = await fetch(`${API_URL}/user/history`,{headers:{'X-User-ID':currentUser.id}}); 
-            const json = await res.json(); 
-            renderHistoryList(json.data);
-        }
+        async function loadHistory() { const res = await fetch(`${API_URL}/user/history`,{headers:{'X-User-ID':currentUser.id}}); const json = await res.json(); renderHistoryList(json.data); }
 
-        // --- RENDER GRID (SONG/PLAYLIST) ---
+        // --- RENDERERS ---
         function renderGrid(data, type) {
             const container = document.getElementById('mainContainer');
             container.innerHTML = "";
             if(!data || data.length === 0) return container.innerHTML = "<div class='col-span-full text-center text-gray-500'>Trống.</div>";
-
             data.forEach(item => {
                 const div = document.createElement('div');
                 div.className = "bg-white/5 hover:bg-white/10 rounded-lg p-4 transition group cursor-pointer border border-transparent hover:border-white/10 relative";
-                
                 div.onclick = (e) => {
                     if (e.target.closest('button') || e.target.closest('i') && e.target.tagName !== 'DIV') return;
                     if(type === 'song') playSong(item.id, item.title, item.artist, item.stream_url, item.image_url, item.lyrics||'');
                     else if (type === 'playlist') viewPlaylist(item.id, item.name);
                 };
-
                 if(type === 'song') {
                     const isLiked = likedSongIds.includes(item.id);
                     const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'manager');
-                    let adminActions = '';
-                    if(canManage) {
-                        const sData = JSON.stringify(item).replace(/"/g, '&quot;');
-                        adminActions = `
-                            <button onclick="openEditSong(event, ${sData})" class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded hover:bg-blue-500 hover:text-white mr-1"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="deleteSongAdmin(${item.id})" class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500 hover:text-white"><i class="fa-solid fa-trash"></i></button>
-                        `;
-                    }
+                    let adminActions = canManage ? `<button onclick="openEditSong(event, ${JSON.stringify(item).replace(/"/g, '&quot;')})" class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded hover:bg-blue-500 hover:text-white mr-1"><i class="fa-solid fa-pen"></i></button><button onclick="deleteSongAdmin(${item.id})" class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500 hover:text-white"><i class="fa-solid fa-trash"></i></button>` : '';
                     let videoBtn = item.video_url ? `<button onclick="openVideo('${item.video_url}')" class="text-gray-500 hover:text-purple-400 mr-2 z-20 relative"><i class="fa-solid fa-video"></i></button>` : '';
-
-                    div.innerHTML = `
-                        <div class="relative mb-3 aspect-square">
-                            <img src="${item.image_url}" onerror="this.src='https://via.placeholder.com/150'" class="w-full h-full object-cover rounded shadow-lg pointer-events-none">
-                            <div class="absolute bottom-2 right-2 w-10 h-10 bg-primary rounded-full text-white shadow-lg opacity-0 group-hover:opacity-100 transition hover:scale-110 flex items-center justify-center pointer-events-none"><i class="fa-solid fa-play ml-1"></i></div>
-                        </div>
-                        <h3 class="font-bold text-white text-sm truncate pointer-events-none">${item.title}</h3>
-                        <p class="text-xs text-gray-400 truncate mt-1 pointer-events-none">${item.artist}</p>
-                        <div class="flex justify-between items-center mt-2 relative z-10">
-                            <div class="flex gap-2">
-                                <button onclick="toggleLike(event, ${item.id})" class="${isLiked?'text-primary':'text-gray-500'} hover:text-white"><i class="fa-solid fa-heart"></i></button>
-                                <button onclick="openPlaylistModal(${item.id})" class="text-gray-500 hover:text-white"><i class="fa-solid fa-plus"></i></button>
-                                ${videoBtn}
-                            </div>
-                            <div class="flex gap-1">${adminActions}</div>
-                        </div>
-                    `;
-                } else if (type === 'playlist') {
-                    div.innerHTML = `
-                        <div class="relative mb-3 aspect-square bg-gray-800 rounded flex items-center justify-center text-4xl text-gray-600 pointer-events-none"><i class="fa-solid fa-music"></i></div>
-                        <h3 class="font-bold text-white text-sm truncate pointer-events-none">${item.name}</h3>
-                        <p class="text-xs text-gray-400 mt-1 pointer-events-none">Playlist</p>
-                        <button onclick="deletePlaylist(${item.id})" class="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 hover:scale-110 z-20 relative"><i class="fa-solid fa-trash"></i></button>
-                    `;
+                    div.innerHTML = `<div class="relative mb-3 aspect-square"><img src="${item.image_url}" onerror="this.src='https://via.placeholder.com/150'" class="w-full h-full object-cover rounded shadow-lg pointer-events-none"><div class="absolute bottom-2 right-2 w-10 h-10 bg-primary rounded-full text-white shadow-lg opacity-0 group-hover:opacity-100 transition hover:scale-110 flex items-center justify-center pointer-events-none"><i class="fa-solid fa-play ml-1"></i></div></div><h3 class="font-bold text-white text-sm truncate pointer-events-none">${item.title}</h3><p class="text-xs text-gray-400 truncate mt-1 pointer-events-none">${item.artist}</p><div class="flex justify-between items-center mt-2 relative z-10"><div class="flex gap-2"><button onclick="toggleLike(event, ${item.id})" class="${isLiked?'text-primary':'text-gray-500'} hover:text-white"><i class="fa-solid fa-heart"></i></button><button onclick="openPlaylistModal(${item.id})" class="text-gray-500 hover:text-white"><i class="fa-solid fa-plus"></i></button>${videoBtn}</div><div class="flex gap-1">${adminActions}</div></div>`;
+                } else {
+                    div.innerHTML = `<div class="relative mb-3 aspect-square bg-gray-800 rounded flex items-center justify-center text-4xl text-gray-600 pointer-events-none"><i class="fa-solid fa-music"></i></div><h3 class="font-bold text-white text-sm truncate pointer-events-none">${item.name}</h3><p class="text-xs text-gray-400 mt-1 pointer-events-none">Playlist</p><button onclick="deletePlaylist(${item.id})" class="absolute top-2 right-2 text-red-500 opacity-0 group-hover:opacity-100 hover:scale-110 z-20 relative"><i class="fa-solid fa-trash"></i></button>`;
                 }
                 container.appendChild(div);
             });
@@ -440,31 +513,17 @@
             const container = document.getElementById('mainContainer');
             container.innerHTML = "";
             if(!data || data.length === 0) return container.innerHTML = "<div class='text-center text-gray-500'>Chưa có lịch sử.</div>";
-
             data.forEach(item => {
                 const timeStr = item.played_at ? new Date(item.played_at).toLocaleString('vi-VN') : "Vừa xong";
                 const div = document.createElement('div');
                 div.className = "flex items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer group border border-transparent hover:border-white/10";
-                div.onclick = () => playSong(item.song_id, item.title, item.artist, item.stream_url, item.image_url, item.lyrics);
-
-                div.innerHTML = `
-                    <div class="w-12 h-12 rounded overflow-hidden mr-4"><img src="${item.image_url}" class="w-full h-full object-cover"></div>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-bold text-white text-sm truncate">${item.title}</div>
-                        <div class="text-xs text-gray-400 truncate">${item.artist}</div>
-                    </div>
-                    <div class="text-xs text-gray-500 mr-6 italic flex items-center gap-1">
-                        <i class="fa-regular fa-clock"></i> ${timeStr}
-                    </div>
-                    <button class="text-primary opacity-0 group-hover:opacity-100 transition hover:scale-110">
-                        <i class="fa-solid fa-play-circle text-2xl"></i>
-                    </button>
-                `;
+                div.onclick = (e) => { if(e.target.closest('button')) return; playSong(item.song_id, item.title, item.artist, item.stream_url, item.image_url, item.lyrics); };
+                div.innerHTML = `<div class="w-12 h-12 rounded overflow-hidden mr-4 shadow-md"><img src="${item.image_url}" class="w-full h-full object-cover"></div><div class="flex-1 min-w-0"><div class="font-bold text-white text-sm truncate">${item.title}</div><div class="text-xs text-gray-400 truncate">${item.artist}</div></div><div class="text-xs text-gray-500 mr-6 italic flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${timeStr}</div><button class="text-primary opacity-0 group-hover:opacity-100 transition hover:scale-110"><i class="fa-solid fa-play-circle text-2xl"></i></button>`;
                 container.appendChild(div);
             });
         }
 
-        // --- SEARCH & AI ---
+        // --- SEARCH: AI HYBRID ---
         function handleEnter(e) { if(e.key === 'Enter') performSearch(); }
         async function performSearch() {
             const query = document.getElementById('searchInput').value.trim();
@@ -476,79 +535,80 @@
 
             const sqlList = document.getElementById('sqlResults');
             const aiList = document.getElementById('aiResults');
-            sqlList.innerHTML = '<div class="text-center py-10 text-gray-500">Đang tìm trong Database...</div>';
-            aiList.innerHTML = '<div class="text-center py-10 text-primary">AI đang phân tích...</div>';
+            const aiMsg = document.getElementById('aiAnalysisMsg');
 
+            // 1. LEFT SIDE: LOCAL SQL
+            sqlList.innerHTML = '<div class="text-center py-10 text-gray-500">Đang tìm trong Database...</div>';
             fetch(`${API_URL}/songs?q=${encodeURIComponent(query)}`)
                 .then(r => r.json())
                 .then(json => {
                     sqlList.innerHTML = "";
                     if(json.data.length === 0) sqlList.innerHTML = '<div class="text-center text-gray-500 py-4">Không tìm thấy.</div>';
-                    else json.data.forEach(s => renderRow(s, sqlList, false));
+                    else json.data.forEach(s => renderRow(s, sqlList));
                 }).catch(() => sqlList.innerHTML = 'Lỗi DB');
 
-            setTimeout(() => {
-                const aiData = performAILogic(query);
+            // 2. RIGHT SIDE: AI + YOUTUBE
+            aiList.innerHTML = '<div class="text-center py-10 text-primary animate-pulse">🤖 AI đang phân tích và tìm kiếm...</div>';
+            aiMsg.innerHTML = "";
+
+            try {
+                const res = await fetch(`${API_URL}/ai/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: query })
+                });
+                const json = await res.json();
+                
+                if(json.ai_analysis) aiMsg.innerHTML = `✨ <b>Kết quả:</b> ${json.ai_analysis}`;
                 aiList.innerHTML = "";
-                document.getElementById('aiAnalysisMsg').innerText = `AI phân tích: "${aiData.mood}"`;
-                aiData.localResults.forEach(s => { s.source = "Local DB"; renderRow(s, aiList, false); });
-                aiData.webResults.forEach(s => { s.source = "Internet"; renderRow(s, aiList, true); });
-                if(aiData.localResults.length === 0 && aiData.webResults.length === 0) aiList.innerHTML = "AI không tìm thấy gì.";
-            }, 1000);
-        }
-
-        function performAILogic(keyword) {
-            const k = keyword.toLowerCase();
-            let mood = "Trung tính";
-            let webResults = [];
-            
-            if(k.includes('buồn') || k.includes('mưa') || k.includes('khóc')) {
-                mood = "Tâm trạng / Buồn";
-                webResults = [{title:"Em Gái Mưa", artist:"Hương Tràm", image:"https://via.placeholder.com/50", video_url:""}, {title:"Tháng Tư Là Lời Nói Dối", artist:"Hà Anh Tuấn", image:"https://via.placeholder.com/50"}];
-            } else if(k.includes('vui') || k.includes('quẩy') || k.includes('nhảy')) {
-                mood = "Sôi động";
-                webResults = [{title:"Waiting For You", artist:"MONO", image:"https://via.placeholder.com/50"}, {title:"See Tình", artist:"Hoàng Thùy Linh", image:"https://via.placeholder.com/50"}];
-            } else {
-                mood = "Tìm kiếm thông minh";
-                webResults = [{title: `Bài hát về ${k}`, artist:"Nhiều ca sĩ", image:"https://via.placeholder.com/50"}];
+                
+                if (!json.data || json.data.length === 0) {
+                    aiList.innerHTML = `<div class="text-center py-10 text-gray-500">AI không tìm thấy gợi ý nào phù hợp.</div>`;
+                } else {
+                    json.data.forEach(song => {
+                        // Gọi hàm render, truyền song object vào
+                        renderRow(song, aiList);
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+                aiList.innerHTML = "<div class='text-center py-10 text-red-400'>Lỗi kết nối AI Server!</div>";
             }
-
-            const localResults = allSongsCache.filter(s => {
-                const combined = (s.title + s.genre).toLowerCase();
-                if (mood.includes("Buồn") && (combined.includes('mưa') || combined.includes('yêu') || s.genre==='Ballad')) return true;
-                if (mood.includes("Sôi động") && (s.genre==='Pop' || s.genre==='Rock' || combined.includes('remix'))) return true;
-                return false;
-            }).slice(0, 3);
-
-            return { mood, localResults, webResults };
         }
 
-        function renderRow(song, container, isWebLink) {
+        // --- UPDATED RENDER ROW (FIXED CLICK LOGIC) ---
+        function renderRow(song, container) {
             const div = document.createElement('div');
             div.className = "flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer group border border-transparent hover:border-white/10";
-            const img = isWebLink ? song.image : song.image_url;
+            
+            // Xác định đây là bài từ YouTube hay Local
+            const isYoutube = song.is_youtube === true;
             
             div.onclick = (e) => {
                 if (e.target.closest('button')) return; 
-                if (isWebLink) {
-                    window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(song.title)}`, '_blank');
+                
+                if (isYoutube) {
+                    // NẾU LÀ YOUTUBE: Mở Tab mới để xem
+                    const url = `https://www.youtube.com/watch?v=${song.id}`;
+                    window.open(url, '_blank');
                 } else {
-                    playSong(song.id, song.title, song.artist, song.stream_url, img, song.lyrics||'');
+                    // NẾU LÀ LOCAL: Phát nhạc bình thường
+                    playSong(song.id, song.title, song.artist, song.stream_url, song.image_url, song.lyrics||'');
                 }
             };
 
             let actionBtn = '';
-            if(isWebLink) {
-                actionBtn = `<button onclick="window.open('https://www.youtube.com/results?search_query=${song.title}', '_blank')" class="text-gray-400 hover:text-primary z-20 relative"><i class="fa-solid fa-up-right-from-square"></i></button>`;
+            if(isYoutube) {
+                actionBtn = `<button onclick="window.open('https://www.youtube.com/watch?v=${song.id}', '_blank')" class="text-gray-400 hover:text-red-500 z-20 relative" title="Xem trên YouTube"><i class="fa-brands fa-youtube text-xl"></i></button>`;
             } else {
                 let vidBtn = song.video_url ? `<button onclick="openVideo('${song.video_url}')" class="text-gray-500 hover:text-purple-400 mr-2 z-20 relative"><i class="fa-solid fa-video"></i></button>` : '';
                 actionBtn = `${vidBtn} <button class="text-gray-400 hover:text-primary z-20 relative"><i class="fa-solid fa-play"></i></button>`;
             }
 
             div.innerHTML = `
-                <img src="${img}" class="w-10 h-10 rounded object-cover pointer-events-none">
+                <img src="${song.image_url || 'https://via.placeholder.com/50'}" class="w-10 h-10 rounded object-cover pointer-events-none">
                 <div class="flex-1 min-w-0 pointer-events-none">
-                    <h4 class="text-sm font-bold text-white truncate">${song.title} ${song.source ? `<span class="text-[9px] bg-white/10 px-1 rounded text-gray-400">${song.source}</span>` : ''}</h4>
+                    <h4 class="text-sm font-bold text-white truncate">${song.title} ${isYoutube ? '<span class="text-[9px] bg-red-600 text-white px-1 rounded ml-1">YT</span>' : ''}</h4>
                     <p class="text-xs text-gray-400 truncate">${song.artist}</p>
                 </div>
                 <div>${actionBtn}</div>
@@ -566,39 +626,15 @@
                 const div = document.createElement('div');
                 div.className = "bg-white/5 p-4 rounded border border-white/10 flex items-center justify-between";
                 const isLocked = u.is_locked === 1;
-                div.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white"><i class="fa-solid fa-user"></i></div>
-                        <div>
-                            <div class="font-bold text-white text-sm">${u.username} <span class="text-xs ${isLocked?'text-red-500':'text-green-500'}">(${isLocked?'Locked':'Active'})</span></div>
-                            <div class="text-xs text-gray-400 uppercase">${u.role}</div>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        ${u.id !== currentUser.id ? `<button onclick="changeRole(${u.id}, '${u.role==='user'?'manager':'user'}')" class="text-blue-400 hover:text-white" title="Đổi quyền"><i class="fa-solid fa-user-gear"></i></button><button onclick="toggleLock(${u.id})" class="text-orange-400 hover:text-white"><i class="fa-solid ${isLocked?'fa-lock-open':'fa-lock'}"></i></button><button onclick="deleteUser(${u.id})" class="text-red-500 hover:text-white"><i class="fa-solid fa-trash"></i></button>` : ''}
-                    </div>
-                `;
+                div.innerHTML = `<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white"><i class="fa-solid fa-user"></i></div><div><div class="font-bold text-white text-sm">${u.username} <span class="text-xs ${isLocked?'text-red-500':'text-green-500'}">(${isLocked?'Locked':'Active'})</span></div><div class="text-xs text-gray-400 uppercase">${u.role}</div></div></div><div class="flex gap-2">${u.id !== currentUser.id ? `<button onclick="changeRole(${u.id}, '${u.role==='user'?'manager':'user'}')" class="text-blue-400 hover:text-white" title="Đổi quyền"><i class="fa-solid fa-user-gear"></i></button><button onclick="toggleLock(${u.id})" class="text-orange-400 hover:text-white"><i class="fa-solid ${isLocked?'fa-lock-open':'fa-lock'}"></i></button><button onclick="deleteUser(${u.id})" class="text-red-500 hover:text-white"><i class="fa-solid fa-trash"></i></button>` : ''}</div>`;
                 container.appendChild(div);
             });
         }
-
         async function loadStats() {
             const container = document.getElementById('mainContainer');
             const headers = { 'X-User-ID': currentUser.id, 'X-User-Role': currentUser.role };
             const [r1, r2] = await Promise.all([fetch(`${API_URL}/admin/stats/general`, {headers}).then(r=>r.json()), fetch(`${API_URL}/admin/stats/top-listen`, {headers}).then(r=>r.json())]);
-            
-            container.innerHTML = `
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div class="bg-indigo-600/20 border border-indigo-500/30 p-4 rounded-lg"><h4 class="text-indigo-400 text-xs uppercase">Bài Hát</h4><div class="text-3xl font-bold text-white">${r1.totalSongs||0}</div></div>
-                    <div class="bg-green-600/20 border border-green-500/30 p-4 rounded-lg"><h4 class="text-green-400 text-xs uppercase">Users</h4><div class="text-3xl font-bold text-white">${r1.totalUsers||0}</div></div>
-                    <div class="bg-yellow-600/20 border border-yellow-500/30 p-4 rounded-lg"><h4 class="text-yellow-400 text-xs uppercase">Lượt Nghe</h4><div class="text-3xl font-bold text-white">${r1.totalListens||0}</div></div>
-                    <div class="bg-red-600/20 border border-red-500/30 p-4 rounded-lg"><h4 class="text-red-400 text-xs uppercase">Bị Khóa</h4><div class="text-3xl font-bold text-white">${r1.lockedUsers||0}</div></div>
-                </div>
-                <div class="bg-white/5 border border-white/10 rounded-lg p-6">
-                    <h3 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Top Nghe Nhiều</h3>
-                    <div class="space-y-3">${r2.data.map((s,i) => `<div class="flex justify-between items-center text-sm"><div class="flex items-center gap-3"><span class="text-primary font-bold w-6">#${i+1}</span> <span class="text-white">${s.title}</span></div><span class="text-gray-400">${s.listen_count} lượt</span></div>`).join('')}</div>
-                </div>
-            `;
+            container.innerHTML = `<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"><div class="bg-indigo-600/20 border border-indigo-500/30 p-4 rounded-lg"><h4 class="text-indigo-400 text-xs uppercase">Bài Hát</h4><div class="text-3xl font-bold text-white">${r1.totalSongs||0}</div></div><div class="bg-green-600/20 border border-green-500/30 p-4 rounded-lg"><h4 class="text-green-400 text-xs uppercase">Users</h4><div class="text-3xl font-bold text-white">${r1.totalUsers||0}</div></div><div class="bg-yellow-600/20 border border-yellow-500/30 p-4 rounded-lg"><h4 class="text-yellow-400 text-xs uppercase">Lượt Nghe</h4><div class="text-3xl font-bold text-white">${r1.totalListens||0}</div></div><div class="bg-red-600/20 border border-red-500/30 p-4 rounded-lg"><h4 class="text-red-400 text-xs uppercase">Bị Khóa</h4><div class="text-3xl font-bold text-white">${r1.lockedUsers||0}</div></div></div><div class="bg-white/5 border border-white/10 rounded-lg p-6"><h3 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Top Nghe Nhiều</h3><div class="space-y-3">${r2.data.map((s,i) => `<div class="flex justify-between items-center text-sm"><div class="flex items-center gap-3"><span class="text-primary font-bold w-6">#${i+1}</span> <span class="text-white">${s.title}</span></div><span class="text-gray-400">${s.listen_count} lượt</span></div>`).join('')}</div></div>`;
         }
 
         // --- UTILS ---
@@ -610,123 +646,27 @@
         async function deletePlaylist(id) { if(confirm("Xóa playlist?")) { await fetch(`${API_URL}/user/playlists/delete/${id}`, {method:'DELETE', headers:{'X-User-ID':currentUser.id}}); loadPlaylists(); } }
         async function openPlaylistModal(songId) { selectedSongId = songId; document.getElementById('playlistModal').classList.remove('hidden'); const list = document.getElementById('modalPlaylistList'); const res = await fetch(`${API_URL}/user/playlists`, {headers:{'X-User-ID':currentUser.id}}); const json = await res.json(); list.innerHTML = ""; json.data.forEach(p => { const div = document.createElement('div'); div.className = "p-2 hover:bg-white/10 cursor-pointer text-white text-sm"; div.innerText = p.name; div.onclick = async () => { await fetch(`${API_URL}/user/playlists/add-song`, {method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({playlist_id:p.id, song_id:selectedSongId})}); alert("Đã thêm!"); document.getElementById('playlistModal').classList.add('hidden'); }; list.appendChild(div); }); }
         
-        // ADMIN ACTIONS
-        async function deleteSongAdmin(id) { 
-            event.stopPropagation();
-            if(confirm("Xóa bài hát?")) { 
-                await fetch(`${API_URL}/admin/songs/${id}`, {method:'DELETE', headers:{'X-User-ID':currentUser.id, 'X-User-Role':currentUser.role}}); 
-                loadSongs(); 
-            } 
-        }
-        async function toggleLike(e, id) { 
-            e.stopPropagation(); 
-            await fetch(`${API_URL}/user/likes/toggle`, {method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({song_id:id})}); 
-            // Refresh đúng tab đang đứng
-            if(document.getElementById('pageName').innerText === "Yêu Thích") loadLikedSongs(); else loadSongs();
-        }
+        async function deleteSongAdmin(id) { event.stopPropagation(); if(confirm("Xóa bài hát?")) { await fetch(`${API_URL}/admin/songs/${id}`, {method:'DELETE', headers:{'X-User-ID':currentUser.id, 'X-User-Role':currentUser.role}}); loadSongs(); } }
+        async function toggleLike(e, id) { e.stopPropagation(); await fetch(`${API_URL}/user/likes/toggle`, {method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({song_id:id})}); if(document.getElementById('pageName').innerText === "Yêu Thích") loadLikedSongs(); else loadSongs(); }
         function toggleAdminModal() { document.getElementById('adminModal').classList.toggle('hidden'); }
-        
-        async function addSong() { 
-            const formData = new FormData(); 
-            formData.append('title', document.getElementById('newTitle').value); 
-            formData.append('artist', document.getElementById('newArtist').value); 
-            formData.append('genre', document.getElementById('newGenre').value); 
-            formData.append('year', document.getElementById('newYear').value);
-            formData.append('lyrics', document.getElementById('newLyrics').value);
-            formData.append('musicFile', document.getElementById('newFile').files[0]); 
-            formData.append('imageFile', document.getElementById('newImage').files[0]); 
-            formData.append('videoFile', document.getElementById('newVideo').files[0]);
-            try { 
-                const res = await fetch(`${API_URL}/admin/songs/add`, {method:'POST', headers:{'X-User-ID':currentUser.id, 'X-User-Role':currentUser.role}, body:formData}); 
-                if(res.ok) { alert("Thành công!"); toggleAdminModal(); loadSongs(); }
-            } catch(e) { alert("Lỗi"); } 
-        }
+        async function addSong() { const formData = new FormData(); formData.append('title', document.getElementById('newTitle').value); formData.append('artist', document.getElementById('newArtist').value); formData.append('genre', document.getElementById('newGenre').value); formData.append('year', document.getElementById('newYear').value); formData.append('lyrics', document.getElementById('newLyrics').value); formData.append('musicFile', document.getElementById('newFile').files[0]); formData.append('imageFile', document.getElementById('newImage').files[0]); formData.append('videoFile', document.getElementById('newVideo').files[0]); try { const res = await fetch(`${API_URL}/admin/songs/add`, {method:'POST', headers:{'X-User-ID':currentUser.id, 'X-User-Role':currentUser.role}, body:formData}); if(res.ok) { alert("Thành công!"); toggleAdminModal(); loadSongs(); }} catch(e) { alert("Lỗi"); } }
+        function openEditSong(e, song) { e.stopPropagation(); document.getElementById('editId').value = song.id; document.getElementById('editTitle').value = song.title; document.getElementById('editArtist').value = song.artist; document.getElementById('editGenre').value = song.genre; document.getElementById('editYear').value = song.year; document.getElementById('editLyrics').value = song.lyrics; document.getElementById('editSongModal').classList.remove('hidden'); }
+        async function submitEditSong() { const id = document.getElementById('editId').value; const body = { title: document.getElementById('editTitle').value, artist: document.getElementById('editArtist').value, genre: document.getElementById('editGenre').value, year: document.getElementById('editYear').value, lyrics: document.getElementById('editLyrics').value }; await fetch(`${API_URL}/admin/songs/update/${id}`, {method:'PUT', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id,'X-User-Role':currentUser.role}, body:JSON.stringify(body)}); alert("Đã sửa!"); document.getElementById('editSongModal').classList.add('hidden'); loadSongs(); }
 
-        function openEditSong(e, song) {
-            e.stopPropagation();
-            document.getElementById('editId').value = song.id;
-            document.getElementById('editTitle').value = song.title;
-            document.getElementById('editArtist').value = song.artist;
-            document.getElementById('editGenre').value = song.genre;
-            document.getElementById('editYear').value = song.year;
-            document.getElementById('editLyrics').value = song.lyrics;
-            document.getElementById('editSongModal').classList.remove('hidden');
-        }
-
-        async function submitEditSong() {
-            const id = document.getElementById('editId').value;
-            const body = {
-                title: document.getElementById('editTitle').value,
-                artist: document.getElementById('editArtist').value,
-                genre: document.getElementById('editGenre').value,
-                year: document.getElementById('editYear').value,
-                lyrics: document.getElementById('editLyrics').value
-            };
-            await fetch(`${API_URL}/admin/songs/update/${id}`, {method:'PUT', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id,'X-User-Role':currentUser.role}, body:JSON.stringify(body)});
-            alert("Đã sửa!"); document.getElementById('editSongModal').classList.add('hidden'); loadSongs();
-        }
-
-        // PLAYER CONTROLS
+        // PLAYER
         function playSong(id, title, artist, url, img, lyrics) {
-            document.getElementById('currentTitle').innerText = title;
-            document.getElementById('currentArtist').innerText = artist;
-            document.getElementById('currentCover').src = img;
-            document.getElementById('lyricsContent').innerText = lyrics || "Chưa có lời.";
-            
-            const playedAt = new Date().toISOString(); // Lấy thời gian hiện tại
-            
-            audio.src = url; 
-            audio.play(); 
-            togglePlay(); // update icon
-            
-            // Gửi thời gian lên server
-            if(currentUser) fetch(`${API_URL}/user/history/add`, {
-                method:'POST', 
-                headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, 
-                body:JSON.stringify({song_id:id, played_at: playedAt})
-            });
+            document.getElementById('currentTitle').innerText = title; document.getElementById('currentArtist').innerText = artist; document.getElementById('currentCover').src = img; document.getElementById('lyricsContent').innerText = lyrics || "Chưa có lời.";
+            const playedAt = new Date().toISOString();
+            audio.src = url; audio.play(); togglePlay();
+            if(currentUser) fetch(`${API_URL}/user/history/add`, {method:'POST', headers:{'Content-Type':'application/json','X-User-ID':currentUser.id}, body:JSON.stringify({song_id:id, played_at: playedAt})});
         }
-
-        function togglePlay() { 
-            if(audio.paused) {
-                audio.play(); 
-                document.getElementById('playIcon').className = 'fa-solid fa-pause ml-0';
-            } else {
-                audio.pause(); 
-                document.getElementById('playIcon').className = 'fa-solid fa-play ml-1';
-            }
-        }
-        
-        audio.onloadedmetadata = () => {
-            document.getElementById('duration').innerText = formatTime(audio.duration);
-            document.getElementById('currentTime').innerText = "00:00";
-            progressBar.value = 0;
-        };
-        audio.ontimeupdate = () => {
-            if(audio.duration) {
-                const percent = (audio.currentTime / audio.duration) * 100;
-                progressBar.value = percent;
-                document.getElementById('currentTime').innerText = formatTime(audio.currentTime);
-            }
-        };
+        function togglePlay() { if(audio.paused) { audio.play(); document.getElementById('playIcon').className = 'fa-solid fa-pause ml-0'; } else { audio.pause(); document.getElementById('playIcon').className = 'fa-solid fa-play ml-1'; } }
+        audio.onloadedmetadata = () => { document.getElementById('duration').innerText = formatTime(audio.duration); document.getElementById('currentTime').innerText = "00:00"; progressBar.value = 0; };
+        audio.ontimeupdate = () => { if(audio.duration) { progressBar.value = (audio.currentTime / audio.duration) * 100; document.getElementById('currentTime').innerText = formatTime(audio.currentTime); } };
         progressBar.oninput = (e) => { audio.currentTime = (audio.duration / 100) * e.target.value; };
-        function formatTime(s) {
-            if(isNaN(s)) return "00:00";
-            const m = Math.floor(s / 60);
-            const sec = Math.floor(s % 60);
-            return `${m}:${sec<10?'0':''}${sec}`;
-        }
-        
-        // VIDEO
-        function openVideo(url) { 
-            event.stopPropagation();
-            document.getElementById('videoModal').classList.remove('hidden'); 
-            const v = document.getElementById('videoPlayer'); v.src = url; v.play(); audio.pause(); 
-        }
-        function closeVideo() { 
-            document.getElementById('videoModal').classList.add('hidden'); 
-            document.getElementById('videoPlayer').pause(); 
-        }
+        function formatTime(s) { if(isNaN(s)) return "00:00"; const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return `${m}:${sec<10?'0':''}${sec}`; }
+        function openVideo(url) { event.stopPropagation(); document.getElementById('videoModal').classList.remove('hidden'); const v = document.getElementById('videoPlayer'); v.src = url; v.play(); audio.pause(); }
+        function closeVideo() { document.getElementById('videoModal').classList.add('hidden'); document.getElementById('videoPlayer').pause(); }
 
         loadSongs();
     </script>

@@ -1,28 +1,47 @@
 /**
  * src/controllers/authController.js
- * Xử lý: Đăng ký, Đăng nhập (MD5), Quản lý User, Đổi mật khẩu, Lịch sử nghe nhạc
+ * FINAL VERSION
+ * - Đăng ký (Lưu ngày tạo + Ràng buộc độ dài mật khẩu)
+ * - Đăng nhập (MD5 + Check khóa)
+ * - Quản lý User (Admin)
+ * - Đổi mật khẩu (Ràng buộc độ dài)
+ * - Lịch sử nghe nhạc (Tự động tăng view)
  */
 
 const db = require('../config/database');
-const crypto = require('crypto'); // 1. Thư viện mã hóa
+const crypto = require('crypto');
 
 // --- HÀM PHỤ: Mã hóa MD5 ---
 function hashMD5(password) {
     return crypto.createHash('md5').update(password).digest('hex');
 }
 
-// 1. ĐĂNG KÝ
+// ============================================================
+// 1. CHỨC NĂNG XÁC THỰC (AUTH)
+// ============================================================
+
+// ĐĂNG KÝ
 exports.register = (req, res) => {
     const { username, password } = req.body;
+    
+    // 1. Kiểm tra thiếu thông tin
     if (!username || !password) return res.status(400).json({ error: "Thiếu thông tin đăng nhập" });
 
-    // Mã hóa mật khẩu trước khi lưu
+    // 2. [MỚI] Kiểm tra độ dài mật khẩu
+    if (password.length < 6) {
+        return res.status(400).json({ error: "Mật khẩu phải có tối thiểu 6 ký tự!" });
+    }
+
+    // 3. Mã hóa mật khẩu
     const hashedPassword = hashMD5(password);
 
-    // Mặc định tạo user thường (role='user') và trạng thái mở (is_locked=0)
-    const sql = "INSERT INTO users (username, password, role, is_locked) VALUES (?, ?, 'user', 0)";
+    // 4. Lấy thời gian hiện tại
+    const created_at = new Date().toISOString();
+
+    // 5. Lưu vào Database
+    const sql = "INSERT INTO users (username, password, role, is_locked, created_at) VALUES (?, ?, 'user', 0, ?)";
     
-    db.run(sql, [username, hashedPassword], function(err) {
+    db.run(sql, [username, hashedPassword, created_at], function(err) {
         if (err) {
             if (err.message.includes('UNIQUE')) return res.status(400).json({ error: "Tên đăng nhập đã tồn tại" });
             return res.status(500).json({ error: err.message });
@@ -31,11 +50,11 @@ exports.register = (req, res) => {
     });
 };
 
-// 2. ĐĂNG NHẬP (CÓ KIỂM TRA BỊ KHÓA & MD5)
+// ĐĂNG NHẬP
 exports.login = (req, res) => {
     const { username, password } = req.body;
     
-    // Tìm user theo username trước
+    // Tìm user theo username
     db.get("SELECT * FROM users WHERE username = ?", [username], (err, user) => {
         if (err) return res.status(500).json({ error: err.message });
         
@@ -47,7 +66,7 @@ exports.login = (req, res) => {
             return res.status(403).json({ error: "Tài khoản của bạn đã bị KHÓA bởi Admin!" });
         }
 
-        // Mã hóa mật khẩu nhập vào để so sánh
+        // So sánh mật khẩu (MD5)
         const inputHash = hashMD5(password);
 
         if (inputHash !== user.password) {
@@ -65,12 +84,12 @@ exports.login = (req, res) => {
 };
 
 // ============================================================
-// 3. CÁC HÀM QUẢN LÝ DÀNH CHO ADMIN
+// 2. CÁC HÀM QUẢN LÝ DÀNH CHO ADMIN
 // ============================================================
 
-// Lấy danh sách tất cả user
+// Lấy danh sách tất cả user (Kèm ngày tạo)
 exports.getAllUsers = (req, res) => {
-    db.all("SELECT id, username, role, is_locked FROM users", [], (err, rows) => {
+    db.all("SELECT id, username, role, is_locked, created_at FROM users ORDER BY created_at DESC", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ data: rows });
     });
@@ -79,7 +98,7 @@ exports.getAllUsers = (req, res) => {
 // Xóa user
 exports.deleteUser = (req, res) => {
     const targetId = req.params.id;
-    // Kiểm tra: Nếu có req.userId (từ middleware) thì chặn xóa chính mình
+    // Kiểm tra chặn xóa chính mình
     if (req.userId && parseInt(targetId) === req.userId) return res.status(400).json({ error: "Không thể tự xóa chính mình!" });
 
     db.serialize(() => {
@@ -130,13 +149,19 @@ exports.updateUserRole = (req, res) => {
 };
 
 // ============================================================
-// 4. CHỨC NĂNG ĐỔI MẬT KHẨU
+// 3. CHỨC NĂNG ĐỔI MẬT KHẨU
 // ============================================================
 exports.changePassword = (req, res) => {
     const { id, currentPassword, newPassword } = req.body;
 
+    // 1. Kiểm tra thiếu thông tin
     if (!id || !currentPassword || !newPassword) {
         return res.status(400).json({ error: "Vui lòng nhập đủ: ID, Mật khẩu cũ và Mật khẩu mới" });
+    }
+
+    // 2. [MỚI] Kiểm tra độ dài mật khẩu mới
+    if (newPassword.length < 6) {
+        return res.status(400).json({ error: "Mật khẩu mới phải có tối thiểu 6 ký tự!" });
     }
 
     db.get("SELECT password FROM users WHERE id = ?", [id], (err, user) => {
@@ -145,10 +170,12 @@ exports.changePassword = (req, res) => {
 
         const currentHash = hashMD5(currentPassword);
         
+        // 3. Kiểm tra mật khẩu cũ
         if (currentHash !== user.password) {
             return res.status(400).json({ error: "Mật khẩu cũ không chính xác!" });
         }
 
+        // 4. Cập nhật mật khẩu mới
         const newHash = hashMD5(newPassword);
 
         db.run("UPDATE users SET password = ? WHERE id = ?", [newHash, id], function(err) {
@@ -159,39 +186,46 @@ exports.changePassword = (req, res) => {
 };
 
 // ============================================================
-// 5. [MỚI] CHỨC NĂNG LỊCH SỬ NGHE NHẠC
+// 4. CHỨC NĂNG LỊCH SỬ & THỐNG KÊ 
 // ============================================================
 
 // API: Lưu lịch sử (Gọi khi bấm Play)
 exports.addToHistory = (req, res) => {
-    // Lấy User ID: Ưu tiên từ token (req.user), middleware (req.userId) hoặc header (x-user-id)
     const userId = req.user ? req.user.id : (req.userId || req.headers['x-user-id']);
     const { song_id, played_at } = req.body;
 
-    if (!userId) return res.status(401).json({ error: "Chưa xác thực người dùng (Thiếu User ID)" });
+    if (!userId) return res.status(401).json({ error: "Chưa xác thực người dùng" });
     if (!song_id) return res.status(400).json({ error: "Thiếu ID bài hát" });
 
-    // Dùng thời gian client gửi lên hoặc lấy giờ hiện tại
     const time = played_at || new Date().toISOString();
 
-    const sql = "INSERT INTO history (user_id, song_id, played_at) VALUES (?, ?, ?)";
+    // 1. Thêm vào history
+    const sqlHistory = "INSERT INTO history (user_id, song_id, played_at) VALUES (?, ?, ?)";
     
-    db.run(sql, [userId, song_id, time], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: "Đã lưu lịch sử", historyId: this.lastID });
+    db.run(sqlHistory, [userId, song_id, time], function(err) {
+        if (err) return res.status(500).json({ error: "Lỗi lưu lịch sử: " + err.message });
+        
+        const historyId = this.lastID;
+
+        // 2. Tăng lượt nghe trong bảng songs
+        const sqlUpdateCount = "UPDATE songs SET listen_count = listen_count + 1 WHERE id = ?";
+        
+        db.run(sqlUpdateCount, [song_id], (err2) => {
+            if (err2) console.error("Lỗi cập nhật listen_count:", err2.message);
+            
+            res.json({ message: "Đã lưu lịch sử và tăng lượt nghe", historyId: historyId });
+        });
     });
 };
 
 // API: Lấy danh sách lịch sử
 exports.getHistory = (req, res) => {
     const userId = req.user ? req.user.id : (req.userId || req.headers['x-user-id']);
-
     if (!userId) return res.status(401).json({ error: "Chưa xác thực người dùng" });
 
-    // Join bảng history với songs để lấy thông tin chi tiết
     const sql = `
         SELECT h.id as history_id, h.played_at, 
-               s.id, s.title, s.artist, s.genre, s.image_path, s.file_path, s.video_path
+               s.id as song_id, s.title, s.artist, s.genre, s.image_path, s.file_path, s.video_path
         FROM history h
         JOIN songs s ON h.song_id = s.id
         WHERE h.user_id = ?
@@ -201,7 +235,6 @@ exports.getHistory = (req, res) => {
     db.all(sql, [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        // Xử lý URL ảnh/nhạc để trả về link đầy đủ
         const protocol = req.protocol;
         const host = req.get('host');
 
@@ -210,8 +243,8 @@ exports.getHistory = (req, res) => {
             image_url: (!song.image_path || song.image_path.trim() === "") 
                 ? "https://via.placeholder.com/150" 
                 : (song.image_path.startsWith('http') ? song.image_path : `${protocol}://${host}/public/images/${song.image_path}`),
-            stream_url: `${protocol}://${host}/api/stream/${song.id}`,
-            video_url: song.video_path ? `${protocol}://${host}/api/stream-video/${song.id}` : null
+            stream_url: `${protocol}://${host}/api/stream/${song.song_id}`,
+            video_url: song.video_path ? `${protocol}://${host}/api/stream-video/${song.song_id}` : null
         }));
 
         res.json({ data: historyList });
